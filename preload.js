@@ -54,7 +54,6 @@ contextBridge.exposeInMainWorld('api', {
         }
     },
 
-    // 6. Function to check admin password
     checkAdminPassword: async (passwordInput) => {
         try {
             const q = query(collection(db, "passwords"), where("password", "==", passwordInput));
@@ -62,6 +61,27 @@ contextBridge.exposeInMainWorld('api', {
             return !querySnapshot.empty;
         } catch (error) {
             console.error("Error checking password:", error);
+            return false;
+        }
+    },
+
+    // 7. Function to change admin password
+    changeAdminPassword: async (newPassword) => {
+        try {
+            const querySnapshot = await getDocs(collection(db, "passwords"));
+            if (querySnapshot.empty) {
+                // If no password exists, create one
+                await addDoc(collection(db, "passwords"), { password: newPassword });
+            } else {
+                // Update the first found password document
+                // If there are multiple, this updates one of them (usually sufficient for single-user apps)
+                const docId = querySnapshot.docs[0].id;
+                const passwordRef = doc(db, "passwords", docId);
+                await updateDoc(passwordRef, { password: newPassword });
+            }
+            return true;
+        } catch (error) {
+            console.error("Error changing password:", error);
             return false;
         }
     }
