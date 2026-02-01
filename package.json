@@ -1,18 +1,31 @@
 {
   "name": "final-competetion",
   "version": "1.0.0",
-  "description": "",
+  "description": "An interactive competition application",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "dist": "electron-builder",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "build": {
+    "appId": "com.example.final-competetion",
+    "productName": "المسابقة النهائية",
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
   "keywords": [],
-  "author": "",
+  "author": "User",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "electron": "^40.1.0"
+    "electron": "^40.1.0",
+    "electron-builder": "^26.7.0"
   },
   "dependencies": {
     "firebase": "^12.8.0"
