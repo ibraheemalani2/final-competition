@@ -10,7 +10,8 @@ function createWindow() {
             // This is crucial for security and using Node.js features in your UI
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false, // Keep false for security
-            contextIsolation: true  // Keep true for security
+            contextIsolation: true,  // Keep true for security
+            sandbox: false // Allow requiring local files in preload
         }
     });
 

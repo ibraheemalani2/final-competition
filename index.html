@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>مسابقة المعرفة الإسلامية - النسخة الاحترافية</title>
-    
+
     <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
+
     <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -52,23 +53,26 @@
             }
         }
     </script>
-    
+
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Canvas Confetti -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
     <!-- Google Fonts -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700;800&display=swap');
-        
-        body { 
-            font-family: 'Cairo', sans-serif; 
-            margin: 0; padding: 0; overflow: hidden;
-            background-color: #fdfbf7; color: #1f2937;
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #fdfbf7;
+            color: #1f2937;
         }
-        
+
         /* Classic Background Pattern */
         .classic-bg {
             background-color: #fdfbf7;
@@ -83,12 +87,13 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
         }
+
         .classic-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             border-color: #d4af37;
         }
-        
+
         .classic-header {
             background-color: #1b4332;
             color: #fdfbf7;
@@ -102,17 +107,19 @@
             border: 1px solid #1b4332;
             transition: all 0.2s;
         }
+
         .btn-classic:hover {
             background-color: #2d6a4f;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
-        
+
         .btn-outline {
             background-color: white;
             color: #1b4332;
             border: 2px solid #1b4332;
             transition: all 0.2s;
         }
+
         .btn-outline:hover {
             background-color: #f0fdf4;
         }
@@ -121,20 +128,35 @@
             background: linear-gradient(to bottom, #fbbf24, #d97706);
             color: #fff;
             border: 1px solid #b45309;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
+
         .btn-gold:hover {
             filter: brightness(1.1);
             transform: translateY(-1px);
         }
 
         /* Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
 
-        .font-amiri { font-family: 'Amiri', serif; }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .font-amiri {
+            font-family: 'Amiri', serif;
+        }
 
         /* Lock Modal Styles */
         .lock-input {
@@ -144,10 +166,18 @@
             font-family: monospace;
         }
 
-        @media (orientation: portrait) { #portrait-warning { display: flex !important; } }
-        #portrait-warning { display: none; }
+        @media (orientation: portrait) {
+            #portrait-warning {
+                display: flex !important;
+            }
+        }
+
+        #portrait-warning {
+            display: none;
+        }
     </style>
 </head>
+
 <body class="h-screen w-screen overflow-hidden text-slate-800 classic-bg">
     <div id="root" class="h-full w-full"></div>
 
@@ -158,8 +188,8 @@
         const Icon = ({ name, className = "", size = "" }) => {
             const iconMap = {
                 BookOpen: "fa-book-open", Moon: "fa-moon", Star: "fa-star", Trophy: "fa-trophy",
-                ArrowRight: "fa-arrow-right", Settings: "fa-cog", Gift: "fa-gift", 
-                CheckCircle: "fa-check-circle", XCircle: "fa-times-circle", 
+                ArrowRight: "fa-arrow-right", Settings: "fa-cog", Gift: "fa-gift",
+                CheckCircle: "fa-check-circle", XCircle: "fa-times-circle",
                 Sparkles: "fa-magic", Loader2: "fa-spinner fa-spin", Info: "fa-info-circle",
                 Plus: "fa-plus", Trash2: "fa-trash-alt", Edit3: "fa-pen",
                 HelpCircle: "fa-question-circle", AlertTriangle: "fa-exclamation-triangle",
@@ -193,14 +223,11 @@
 
         const INITIAL_DATA = {
             sections: [
-                { id: 1, title: 'القرآن الكريم', icon: 'BookOpen', color: '#1b4332' }, 
+                { id: 1, title: 'القرآن الكريم', icon: 'BookOpen', color: '#1b4332' },
                 { id: 2, title: 'السيرة النبوية', icon: 'Moon', color: '#1e40af' },
                 { id: 3, title: 'الفقه والعقيدة', icon: 'Star', color: '#b45309' },
             ],
-            questions: [
-                { id: 101, sectionId: 1, text: 'كم عدد سور القرآن الكريم؟', type: 'choice', options: ['110', '114', '120', '99'], answer: '114', isAnswered: false },
-                { id: 102, sectionId: 1, text: 'ما هي أعظم سورة في القرآن الكريم؟', type: 'choice', options: ['سورة البقرة', 'سورة الكهف', 'سورة الفاتحة', 'سورة الإخلاص'], answer: 'سورة الفاتحة', isAnswered: false },
-            ],
+            questions: [],
             prizes: [
                 { id: 1, name: 'عطر فاخر', image: 'https://cdn-icons-png.flaticon.com/512/2829/2829929.png', isTaken: false },
                 { id: 2, name: 'مسبحة إلكترونية', image: 'https://cdn-icons-png.flaticon.com/512/4393/4393963.png', isTaken: false },
@@ -232,7 +259,7 @@
 
         const OrientationGuard = ({ labels }) => (
             <div id="portrait-warning" className="fixed inset-0 z-[200] bg-classic-dark flex flex-col items-center justify-center text-white p-8 text-center animate-fade-in border-4 border-classic-gold m-4 rounded-xl">
-                <Icon name="Mobile" size="48" className="text-classic-gold mb-4 animate-bounce"/>
+                <Icon name="Mobile" size="48" className="text-classic-gold mb-4 animate-bounce" />
                 <h2 className="text-3xl font-bold mb-4 text-classic-gold font-amiri">{labels.rotateDevice}</h2>
             </div>
         );
@@ -270,15 +297,15 @@
                     <div className="bg-white rounded-xl p-8 max-w-sm w-full shadow-2xl border-t-8 border-classic-dark animate-fade-in">
                         <div className="text-center">
                             <div className="w-16 h-16 bg-classic-bg rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-classic-gold">
-                                <Icon name={error ? "XCircle" : "Lock"} size="32" className={error ? "text-red-500" : "text-classic-dark"}/>
+                                <Icon name={error ? "XCircle" : "Lock"} size="32" className={error ? "text-red-500" : "text-classic-dark"} />
                             </div>
                             <h3 className="text-xl font-bold text-classic-dark mb-6 font-amiri">{labels.enterPin}</h3>
                             <form onSubmit={handleSubmit}>
-                                <input 
+                                <input
                                     ref={inputRef}
-                                    type="password" 
-                                    value={pin} 
-                                    onChange={(e) => setPin(e.target.value)} 
+                                    type="password"
+                                    value={pin}
+                                    onChange={(e) => setPin(e.target.value)}
                                     maxLength="4"
                                     className={`w-full p-4 border-2 rounded-lg text-center text-2xl font-bold tracking-widest mb-4 outline-none transition ${error ? 'border-red-500 bg-red-50' : 'border-classic-gold focus:border-classic-dark'}`}
                                     placeholder="••••"
@@ -303,16 +330,16 @@
             const [questionForm, setQuestionForm] = useState({ sectionId: '', text: '', type: 'choice', op1: '', op2: '', op3: '', op4: '', answer: '' });
             const [prizeForm, setPrizeForm] = useState({ name: '' });
             const [newPin, setNewPin] = useState("");
-            
+
             const prizeFileInputRef = useRef(null);
-            
+
             const handleConfigImageUpload = (key, e) => {
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
                     reader.onloadend = () => {
                         setAppConfig(prev => {
-                            if(key === 'customBgImage') return { ...prev, bgMode: 'image', customBgImage: reader.result };
+                            if (key === 'customBgImage') return { ...prev, bgMode: 'image', customBgImage: reader.result };
                             return { ...prev, layoutImages: { ...prev.layoutImages, [key]: reader.result } };
                         });
                     };
@@ -370,7 +397,7 @@
             const saveQuestion = (e) => {
                 e.preventDefault();
                 const { text, type, op1, op2, op3, op4, answer, sectionId } = questionForm;
-                if(!sectionId || !answer) return alert("البيانات ناقصة");
+                if (!sectionId || !answer) return alert("البيانات ناقصة");
                 const sId = parseInt(sectionId);
                 const options = type === 'boolean' ? ['صح', 'خطأ'] : [op1, op2, op3, op4];
                 const qData = { text, type, options, answer, sectionId: sId };
@@ -384,12 +411,12 @@
                 e.preventDefault();
                 const file = prizeFileInputRef.current?.files[0];
                 const save = (img) => {
-                    if (editingId) setData(prev => ({...prev, prizes: prev.prizes.map(p => p.id === editingId ? {...p, name: prizeForm.name, image: img || p.image} : p)}));
-                    else setData(prev => ({...prev, prizes: [...prev.prizes, {id: Date.now(), name: prizeForm.name, image: img || 'https://cdn-icons-png.flaticon.com/512/3023/3023573.png', isTaken: false}]}));
+                    if (editingId) setData(prev => ({ ...prev, prizes: prev.prizes.map(p => p.id === editingId ? { ...p, name: prizeForm.name, image: img || p.image } : p) }));
+                    else setData(prev => ({ ...prev, prizes: [...prev.prizes, { id: Date.now(), name: prizeForm.name, image: img || 'https://cdn-icons-png.flaticon.com/512/3023/3023573.png', isTaken: false }] }));
                     setEditingId(null);
                     setPrizeForm({ name: '' });
                 };
-                if(file) {
+                if (file) {
                     const r = new FileReader();
                     r.onloadend = () => save(r.result);
                     r.readAsDataURL(file);
@@ -397,8 +424,8 @@
             };
 
             const handleChangePin = () => {
-                if(newPin.length >= 4) {
-                    setAppConfig(prev => ({...prev, adminPin: newPin}));
+                if (newPin.length >= 4) {
+                    setAppConfig(prev => ({ ...prev, adminPin: newPin }));
                     setNewPin("");
                     alert(appConfig.labels.pinUpdated || "تم تحديث الرمز");
                 }
@@ -409,51 +436,51 @@
                     <div className="bg-white rounded-lg w-full max-w-5xl h-[85vh] flex overflow-hidden shadow-2xl border-4 border-classic-gold">
                         <div className="w-64 bg-classic-dark text-white p-4 flex flex-col gap-2 overflow-y-auto">
                             <h2 className="text-xl font-bold text-classic-gold mb-4 flex items-center gap-2"><Icon name="Settings" /> الإعدادات</h2>
-                            {['general','gameplay','security','intro','home_images','sections','questions','prizes','texts','data'].map(t => (
-                                <button key={t} onClick={()=>setTab(t)} className={`p-3 rounded text-right font-bold transition ${tab===t?'bg-classic-gold text-classic-dark':'hover:bg-white/10'}`}>
-                                    {t==='general'?'المظهر':t==='gameplay'?'اللعب':t==='security'?'الأمان':t==='intro'?'البداية':t==='sections'?'الأقسام':t==='questions'?'الأسئلة':t==='prizes'?'الجوائز':t==='home_images'?'الصور':t==='texts'?'النصوص':'البيانات'}
+                            {['general', 'gameplay', 'security', 'intro', 'home_images', 'sections', 'questions', 'prizes', 'texts', 'data'].map(t => (
+                                <button key={t} onClick={() => setTab(t)} className={`p-3 rounded text-right font-bold transition ${tab === t ? 'bg-classic-gold text-classic-dark' : 'hover:bg-white/10'}`}>
+                                    {t === 'general' ? 'المظهر' : t === 'gameplay' ? 'اللعب' : t === 'security' ? 'الأمان' : t === 'intro' ? 'البداية' : t === 'sections' ? 'الأقسام' : t === 'questions' ? 'الأسئلة' : t === 'prizes' ? 'الجوائز' : t === 'home_images' ? 'الصور' : t === 'texts' ? 'النصوص' : 'البيانات'}
                                 </button>
                             ))}
                             <button onClick={onClose} className="mt-auto p-3 rounded border border-red-400 text-red-300 hover:bg-red-900/20 font-bold">إغلاق</button>
                         </div>
-                        
+
                         <div className="flex-1 bg-gray-50 p-6 overflow-y-auto">
                             {tab === 'general' && (
                                 <div className="space-y-4">
                                     <div className="classic-card p-6">
                                         <h3 className="font-bold mb-4 text-classic-dark">الخلفية</h3>
-                                        <input type="file" onChange={e=>handleConfigImageUpload('customBgImage',e)} className="block w-full text-sm mb-2"/>
-                                        <label className="flex items-center gap-2"><input type="checkbox" checked={appConfig.baseTransparent} onChange={e=>setAppConfig(p=>({...p,baseTransparent:e.target.checked}))}/> تعتيم الخلفية</label>
+                                        <input type="file" onChange={e => handleConfigImageUpload('customBgImage', e)} className="block w-full text-sm mb-2" />
+                                        <label className="flex items-center gap-2"><input type="checkbox" checked={appConfig.baseTransparent} onChange={e => setAppConfig(p => ({ ...p, baseTransparent: e.target.checked }))} /> تعتيم الخلفية</label>
                                     </div>
                                     <div className="classic-card p-6 flex justify-between">
                                         <span>عرض ملء الشاشة (16:9)</span>
-                                        <input type="checkbox" checked={appConfig.presentationMode} onChange={e=>setAppConfig(p=>({...p,presentationMode:e.target.checked}))}/>
+                                        <input type="checkbox" checked={appConfig.presentationMode} onChange={e => setAppConfig(p => ({ ...p, presentationMode: e.target.checked }))} />
                                     </div>
                                 </div>
                             )}
 
                             {tab === 'security' && (
                                 <div className="space-y-4 classic-card p-6">
-                                    <h3 className="font-bold mb-4 text-classic-dark flex items-center gap-2"><Icon name="Lock"/> إعدادات الأمان</h3>
+                                    <h3 className="font-bold mb-4 text-classic-dark flex items-center gap-2"><Icon name="Lock" /> إعدادات الأمان</h3>
                                     <div>
                                         <label className="block text-sm font-bold mb-2">تغيير رمز المرور (Admin PIN)</label>
                                         <div className="flex gap-2">
-                                            <input type="text" value={newPin} onChange={e=>setNewPin(e.target.value)} className="p-2 border rounded flex-1" placeholder="الرمز الجديد"/>
+                                            <input type="text" value={newPin} onChange={e => setNewPin(e.target.value)} className="p-2 border rounded flex-1" placeholder="الرمز الجديد" />
                                             <button onClick={handleChangePin} className="btn-classic px-4 rounded">حفظ</button>
                                         </div>
                                     </div>
                                     <p className="text-xs text-gray-500 mt-2">الرمز الحالي يستخدم للدخول إلى لوحة التحكم.</p>
                                 </div>
                             )}
-                            
+
                             {tab === 'gameplay' && (
                                 <div className="space-y-4 classic-card p-6">
                                     <label className="flex items-center gap-2 font-bold text-gray-700">
-                                        <input type="checkbox" checked={appConfig.enableTimer} onChange={e=>setAppConfig(p=>({...p,enableTimer:e.target.checked}))} className="w-5 h-5"/>
+                                        <input type="checkbox" checked={appConfig.enableTimer} onChange={e => setAppConfig(p => ({ ...p, enableTimer: e.target.checked }))} className="w-5 h-5" />
                                         تفعيل المؤقت
                                     </label>
                                     <label className="flex items-center gap-2 font-bold text-gray-700">
-                                        <input type="checkbox" checked={appConfig.enableTTS} onChange={e=>setAppConfig(p=>({...p,enableTTS:e.target.checked}))} className="w-5 h-5"/>
+                                        <input type="checkbox" checked={appConfig.enableTTS} onChange={e => setAppConfig(p => ({ ...p, enableTTS: e.target.checked }))} className="w-5 h-5" />
                                         قراءة السؤال (TTS)
                                     </label>
                                 </div>
@@ -462,27 +489,27 @@
                             {tab === 'sections' && (
                                 <div className="space-y-4">
                                     <form onSubmit={saveSection} className="p-4 bg-white rounded border border-gray-300 flex gap-2">
-                                        <input value={sectionForm.title} onChange={e=>setSectionForm({...sectionForm, title:e.target.value})} placeholder="اسم القسم" className="flex-1 p-2 border rounded"/>
-                                        <input type="color" value={sectionForm.color} onChange={e=>setSectionForm({...sectionForm, color:e.target.value})} className="h-10 w-10 p-0 border-0 cursor-pointer"/>
+                                        <input value={sectionForm.title} onChange={e => setSectionForm({ ...sectionForm, title: e.target.value })} placeholder="اسم القسم" className="flex-1 p-2 border rounded" />
+                                        <input type="color" value={sectionForm.color} onChange={e => setSectionForm({ ...sectionForm, color: e.target.value })} className="h-10 w-10 p-0 border-0 cursor-pointer" />
                                         <button className="btn-classic px-6 rounded font-bold">حفظ</button>
                                     </form>
-                                    {data.sections.map(s => <div key={s.id} className="p-3 bg-white border rounded flex justify-between items-center"><div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full" style={{backgroundColor:s.color}}></span><span className="font-bold">{s.title}</span></div><div className="flex gap-2"><button onClick={()=>{setEditingId(s.id); setSectionForm({title:s.title, color:s.color})}} className="text-blue-600"><Icon name="Edit3"/></button><button onClick={()=>{if(confirm('حذف؟')) setData(d=>({...d, sections:d.sections.filter(x=>x.id!==s.id)}))}} className="text-red-600"><Icon name="Trash2"/></button></div></div>)}
+                                    {data.sections.map(s => <div key={s.id} className="p-3 bg-white border rounded flex justify-between items-center"><div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full" style={{ backgroundColor: s.color }}></span><span className="font-bold">{s.title}</span></div><div className="flex gap-2"><button onClick={() => { setEditingId(s.id); setSectionForm({ title: s.title, color: s.color }) }} className="text-blue-600"><Icon name="Edit3" /></button><button onClick={() => { if (confirm('حذف؟')) setData(d => ({ ...d, sections: d.sections.filter(x => x.id !== s.id) })) }} className="text-red-600"><Icon name="Trash2" /></button></div></div>)}
                                 </div>
                             )}
 
                             {tab === 'questions' && (
                                 <div className="space-y-4">
                                     <form onSubmit={saveQuestion} className="p-4 bg-white rounded border border-gray-300 space-y-3">
-                                        <select value={questionForm.sectionId} onChange={e=>setQuestionForm({...questionForm, sectionId:e.target.value})} className="w-full p-2 border rounded"><option value="">اختر القسم...</option>{data.sections.map(s=><option key={s.id} value={s.id}>{s.title}</option>)}</select>
-                                        <textarea value={questionForm.text} onChange={e=>setQuestionForm({...questionForm, text:e.target.value})} placeholder="نص السؤال" rows="2" className="w-full p-2 border rounded"></textarea>
+                                        <select value={questionForm.sectionId} onChange={e => setQuestionForm({ ...questionForm, sectionId: e.target.value })} className="w-full p-2 border rounded"><option value="">اختر القسم...</option>{data.sections.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}</select>
+                                        <textarea value={questionForm.text} onChange={e => setQuestionForm({ ...questionForm, text: e.target.value })} placeholder="نص السؤال" rows="2" className="w-full p-2 border rounded"></textarea>
                                         <div className="flex gap-4">
-                                            <label className="flex items-center gap-2"><input type="radio" name="qt" checked={questionForm.type==='choice'} onChange={()=>setQuestionForm({...questionForm, type:'choice'})}/> خيارات</label>
-                                            <label className="flex items-center gap-2"><input type="radio" name="qt" checked={questionForm.type==='boolean'} onChange={()=>setQuestionForm({...questionForm, type:'boolean'})}/> صح/خطأ</label>
+                                            <label className="flex items-center gap-2"><input type="radio" name="qt" checked={questionForm.type === 'choice'} onChange={() => setQuestionForm({ ...questionForm, type: 'choice' })} /> خيارات</label>
+                                            <label className="flex items-center gap-2"><input type="radio" name="qt" checked={questionForm.type === 'boolean'} onChange={() => setQuestionForm({ ...questionForm, type: 'boolean' })} /> صح/خطأ</label>
                                         </div>
-                                        {questionForm.type==='choice' && <div className="grid grid-cols-2 gap-2">{['op1','op2','op3','op4'].map(k=><input key={k} value={questionForm[k]} onChange={e=>setQuestionForm({...questionForm, [k]:e.target.value})} placeholder={`الخيار ${k.replace('op','')}`} className="p-2 border rounded"/>)}</div>}
-                                        <select value={questionForm.answer} onChange={e=>setQuestionForm({...questionForm, answer:e.target.value})} className="w-full p-2 border rounded font-bold bg-green-50 text-green-700">
+                                        {questionForm.type === 'choice' && <div className="grid grid-cols-2 gap-2">{['op1', 'op2', 'op3', 'op4'].map(k => <input key={k} value={questionForm[k]} onChange={e => setQuestionForm({ ...questionForm, [k]: e.target.value })} placeholder={`الخيار ${k.replace('op', '')}`} className="p-2 border rounded" />)}</div>}
+                                        <select value={questionForm.answer} onChange={e => setQuestionForm({ ...questionForm, answer: e.target.value })} className="w-full p-2 border rounded font-bold bg-green-50 text-green-700">
                                             <option value="">الإجابة الصحيحة</option>
-                                            {questionForm.type==='boolean' ? <><option value="صح">صح</option><option value="خطأ">خطأ</option></> : ['op1','op2','op3','op4'].map(k=>questionForm[k]&&<option key={k} value={questionForm[k]}>{questionForm[k]}</option>)}
+                                            {questionForm.type === 'boolean' ? <><option value="صح">صح</option><option value="خطأ">خطأ</option></> : ['op1', 'op2', 'op3', 'op4'].map(k => questionForm[k] && <option key={k} value={questionForm[k]}>{questionForm[k]}</option>)}
                                         </select>
                                         <button className="btn-classic w-full py-2 rounded font-bold">حفظ السؤال</button>
                                     </form>
@@ -491,8 +518,8 @@
                                             <div key={q.id} className="p-2 border rounded bg-white flex justify-between items-center text-sm">
                                                 <span className="truncate flex-1">{q.text}</span>
                                                 <div className="flex gap-2">
-                                                    <button onClick={()=>{setEditingId(q.id); setQuestionForm({...q, op1:q.options[0], op2:q.options[1], op3:q.options[2], op4:q.options[3]})}} className="text-blue-500"><Icon name="Edit3"/></button>
-                                                    <button onClick={()=>setData(d=>({...d, questions:d.questions.filter(x=>x.id!==q.id)}))} className="text-red-500"><Icon name="Trash2"/></button>
+                                                    <button onClick={() => { setEditingId(q.id); setQuestionForm({ ...q, op1: q.options[0], op2: q.options[1], op3: q.options[2], op4: q.options[3] }) }} className="text-blue-500"><Icon name="Edit3" /></button>
+                                                    <button onClick={() => setData(d => ({ ...d, questions: d.questions.filter(x => x.id !== q.id) }))} className="text-red-500"><Icon name="Trash2" /></button>
                                                 </div>
                                             </div>
                                         ))}
@@ -503,15 +530,15 @@
                             {tab === 'prizes' && (
                                 <div className="space-y-4">
                                     <form onSubmit={savePrize} className="p-4 bg-white rounded border border-gray-300 flex gap-2 items-center">
-                                        <input value={prizeForm.name} onChange={e=>setPrizeForm({...prizeForm, name:e.target.value})} placeholder="اسم الجائزة" className="flex-1 p-2 border rounded"/>
-                                        <input type="file" ref={prizeFileInputRef} className="text-sm w-40"/>
+                                        <input value={prizeForm.name} onChange={e => setPrizeForm({ ...prizeForm, name: e.target.value })} placeholder="اسم الجائزة" className="flex-1 p-2 border rounded" />
+                                        <input type="file" ref={prizeFileInputRef} className="text-sm w-40" />
                                         <button className="btn-classic px-4 py-2 rounded font-bold">إضافة</button>
                                     </form>
                                     <div className="grid grid-cols-2 gap-2">
                                         {data.prizes.map(p => (
                                             <div key={p.id} className="p-2 border rounded bg-white flex items-center justify-between">
-                                                <div className="flex items-center gap-2"><img src={p.image} className="w-8 h-8 object-contain"/><span>{p.name}</span></div>
-                                                <button onClick={()=>setData(d=>({...d, prizes:d.prizes.filter(x=>x.id!==p.id)}))} className="text-red-500"><Icon name="Trash2"/></button>
+                                                <div className="flex items-center gap-2"><img src={p.image} className="w-8 h-8 object-contain" /><span>{p.name}</span></div>
+                                                <button onClick={() => setData(d => ({ ...d, prizes: d.prizes.filter(x => x.id !== p.id) }))} className="text-red-500"><Icon name="Trash2" /></button>
                                             </div>
                                         ))}
                                     </div>
@@ -522,13 +549,13 @@
                                 <div className="space-y-4">
                                     <div className="classic-card p-4">
                                         <label className="block font-bold mb-2">تغيير حجم الشعارات</label>
-                                        <input 
-                                            type="range" 
-                                            min="0.5" 
-                                            max="1.5" 
-                                            step="0.1" 
-                                            value={appConfig.logoScale || 1} 
-                                            onChange={e => setAppConfig(c => ({...c, logoScale: parseFloat(e.target.value)}))}
+                                        <input
+                                            type="range"
+                                            min="0.5"
+                                            max="1.5"
+                                            step="0.1"
+                                            value={appConfig.logoScale || 1}
+                                            onChange={e => setAppConfig(c => ({ ...c, logoScale: parseFloat(e.target.value) }))}
                                             className="w-full accent-classic-gold"
                                         />
                                         <div className="text-center text-sm font-bold text-gray-500 mt-1">
@@ -537,11 +564,11 @@
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        {['topImage','bottomImage','rightImage','leftImage'].map(k => (
+                                        {['topImage', 'bottomImage', 'rightImage', 'leftImage'].map(k => (
                                             <div key={k} className="classic-card p-4">
-                                                <label className="block font-bold mb-2 text-sm">{k.replace('Image','')}</label>
-                                                <input type="file" onChange={e=>handleConfigImageUpload(k,e)} className="text-sm w-full"/>
-                                                {appConfig.layoutImages?.[k] && <button onClick={()=>removeConfigImage(k)} className="text-red-600 text-xs mt-2 font-bold">حذف الصورة</button>}
+                                                <label className="block font-bold mb-2 text-sm">{k.replace('Image', '')}</label>
+                                                <input type="file" onChange={e => handleConfigImageUpload(k, e)} className="text-sm w-full" />
+                                                {appConfig.layoutImages?.[k] && <button onClick={() => removeConfigImage(k)} className="text-red-600 text-xs mt-2 font-bold">حذف الصورة</button>}
                                             </div>
                                         ))}
                                     </div>
@@ -550,22 +577,22 @@
 
                             {tab === 'intro' && (
                                 <div className="space-y-4 classic-card p-6">
-                                    <label className="flex items-center gap-2 font-bold"><input type="checkbox" checked={appConfig.enableIntro} onChange={e=>setAppConfig(c=>({...c, enableIntro: e.target.checked}))}/> تفعيل شاشة البداية</label>
-                                    <div><label className="block text-sm font-bold mb-1">اسم الراعي</label><input value={appConfig.sponsorName} onChange={e=>setAppConfig(c=>({...c, sponsorName: e.target.value}))} className="w-full p-2 border rounded"/></div>
-                                    <div><label className="block text-sm font-bold mb-1">شعار الراعي</label><input type="file" onChange={e=>handleConfigImageUpload('sponsorLogo',e)} className="text-sm"/></div>
-                                    
+                                    <label className="flex items-center gap-2 font-bold"><input type="checkbox" checked={appConfig.enableIntro} onChange={e => setAppConfig(c => ({ ...c, enableIntro: e.target.checked }))} /> تفعيل شاشة البداية</label>
+                                    <div><label className="block text-sm font-bold mb-1">اسم الراعي</label><input value={appConfig.sponsorName} onChange={e => setAppConfig(c => ({ ...c, sponsorName: e.target.value }))} className="w-full p-2 border rounded" /></div>
+                                    <div><label className="block text-sm font-bold mb-1">شعار الراعي</label><input type="file" onChange={e => handleConfigImageUpload('sponsorLogo', e)} className="text-sm" /></div>
+
                                     <div className="pt-2 border-t border-gray-200">
                                         <label className="block text-sm font-bold mb-2 flex justify-between">
                                             <span>حجم شعار الراعي</span>
                                             <span className="text-gray-500 text-xs">{Math.round((appConfig.sponsorLogoScale || 1) * 100)}%</span>
                                         </label>
-                                        <input 
-                                            type="range" 
-                                            min="0.5" 
-                                            max="3.0" 
-                                            step="0.1" 
-                                            value={appConfig.sponsorLogoScale || 1} 
-                                            onChange={e => setAppConfig(c => ({...c, sponsorLogoScale: parseFloat(e.target.value)}))}
+                                        <input
+                                            type="range"
+                                            min="0.5"
+                                            max="3.0"
+                                            step="0.1"
+                                            value={appConfig.sponsorLogoScale || 1}
+                                            onChange={e => setAppConfig(c => ({ ...c, sponsorLogoScale: parseFloat(e.target.value) }))}
                                             className="w-full accent-classic-gold"
                                         />
                                     </div>
@@ -577,16 +604,16 @@
                                     {Object.entries(appConfig.labels).map(([k, v]) => (
                                         <div key={k} className="flex flex-col">
                                             <label className="text-xs font-bold text-gray-500 mb-1">{k}</label>
-                                            <input value={v} onChange={e => updateLabel(k, e.target.value)} className="p-2 border rounded text-sm"/>
+                                            <input value={v} onChange={e => updateLabel(k, e.target.value)} className="p-2 border rounded text-sm" />
                                         </div>
                                     ))}
                                 </div>
                             )}
-                            
+
                             {tab === 'data' && (
                                 <div className="space-y-4 text-center">
                                     <button onClick={handleExport} className="btn-outline w-full p-3 rounded font-bold">تصدير البيانات (JSON)</button>
-                                    <label className="btn-outline w-full p-3 rounded font-bold block cursor-pointer">استيراد بيانات<input type="file" onChange={handleImport} className="hidden"/></label>
+                                    <label className="btn-outline w-full p-3 rounded font-bold block cursor-pointer">استيراد بيانات<input type="file" onChange={handleImport} className="hidden" /></label>
                                     <button onClick={onReset} className="w-full p-3 bg-red-100 text-red-700 border border-red-300 rounded font-bold">إعادة تعيين المصنع</button>
                                 </div>
                             )}
@@ -597,65 +624,97 @@
         };
 
         const ConfirmModal = ({ message, onConfirm, onCancel, labels }) => (
-          <div className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg p-8 max-w-sm w-full shadow-2xl border-t-8 border-classic-gold">
-                <div className="text-center mb-6">
-                    <Icon name="AlertTriangle" size="40" className="text-classic-gold mb-3"/>
-                    <h3 className="text-xl font-bold text-gray-800">{labels.alertTitle}</h3>
-                    <p className="text-gray-600 font-bold">{message}</p>
-                </div>
-                <div className="flex gap-3">
-                    <button onClick={onCancel} className="flex-1 py-2 rounded bg-gray-200 hover:bg-gray-300 font-bold">{labels.confirmNo}</button>
-                    <button onClick={onConfirm} className="flex-1 py-2 rounded bg-classic-dark text-white hover:bg-classic-green font-bold">{labels.confirmYes}</button>
+            <div className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white rounded-lg p-8 max-w-sm w-full shadow-2xl border-t-8 border-classic-gold">
+                    <div className="text-center mb-6">
+                        <Icon name="AlertTriangle" size="40" className="text-classic-gold mb-3" />
+                        <h3 className="text-xl font-bold text-gray-800">{labels.alertTitle}</h3>
+                        <p className="text-gray-600 font-bold">{message}</p>
+                    </div>
+                    <div className="flex gap-3">
+                        <button onClick={onCancel} className="flex-1 py-2 rounded bg-gray-200 hover:bg-gray-300 font-bold">{labels.confirmNo}</button>
+                        <button onClick={onConfirm} className="flex-1 py-2 rounded bg-classic-dark text-white hover:bg-classic-green font-bold">{labels.confirmYes}</button>
+                    </div>
                 </div>
             </div>
-          </div>
         );
 
         // --- Main Application ---
         const App = () => {
             const [data, setData] = useState(INITIAL_DATA);
-            const [appConfig, setAppConfig] = useState({ 
-                bgMode: 'pattern', activePatternId: 'geo1', customBgImage: null, 
+            const [appConfig, setAppConfig] = useState({
+                bgMode: 'pattern', activePatternId: 'geo1', customBgImage: null,
                 baseTransparent: true, presentationMode: false, labels: DEFAULT_LABELS,
                 enableIntro: true, sponsorName: '', layoutImages: {},
                 enableTimer: true, enableTTS: false, adminPin: '1234', logoScale: 1, sponsorLogoScale: 1
             });
-            
+
             const [introShown, setIntroShown] = useState(false);
-            const [view, setView] = useState('home'); 
+            const [view, setView] = useState('home');
             const [isFullscreen, setIsFullscreen] = useState(false);
             const [score, setScore] = useState(0);
             const [timer, setTimer] = useState(30);
-            
+
             // UI State
             const [activeSection, setActiveSection] = useState(null);
             const [activeQuestion, setActiveQuestion] = useState(null);
             const [selectedPrize, setSelectedPrize] = useState(null);
-            const [feedback, setFeedback] = useState(null); 
+            const [feedback, setFeedback] = useState(null);
             const [showSettings, setShowSettings] = useState(false);
             const [showPinModal, setShowPinModal] = useState(false);
             const [confirmDialog, setConfirmDialog] = useState({ show: false, message: '', onConfirm: null });
             const [scale, setScale] = useState(1);
-            
+
             // AI State
             const [aiExplanation, setAiExplanation] = useState(null);
             const [isExplaining, setIsExplaining] = useState(false);
             const [isGenerating, setIsGenerating] = useState(false);
-            const apiKey = ""; 
+            const apiKey = "";
 
             // Initialize
             useEffect(() => { if (appConfig.enableIntro && !introShown) setView('intro'); }, [appConfig.enableIntro]);
 
-            // Persistence
-            useEffect(() => { const d = localStorage.getItem('qDataClassic2'), c = localStorage.getItem('qConfigClassic2'); if(d) setData(JSON.parse(d)); if(c) setAppConfig(JSON.parse(c)); }, []);
-            useEffect(() => { localStorage.setItem('qDataClassic2', JSON.stringify(data)); }, [data]);
-            useEffect(() => { localStorage.setItem('qConfigClassic2', JSON.stringify(appConfig)); }, [appConfig]);
+            useEffect(() => { const d = localStorage.getItem('qDataClassic3'), c = localStorage.getItem('qConfigClassic3'); if (d) setData(JSON.parse(d)); if (c) setAppConfig(JSON.parse(c)); }, []);
+
+            // --- FIREBASE INTEGRATION ---
+            useEffect(() => {
+                // Initial Load
+                if (window.api && window.api.getQuestions) {
+                    window.api.getQuestions().then(dbQuestions => {
+                        console.log("Loaded questions from Firestore:", dbQuestions);
+                        if (dbQuestions && dbQuestions.length > 0) {
+                            setData(prev => {
+                                // Merge logic: You might want to replace entirely or merge
+                                // Here we replace the questions array with the one from DB
+                                // But we need to make sure we don't lose 'isAnswered' status if it was persisted locally.
+                                // A simple approach is to trust Firestore as the Single Source of Truth for *questions content*,
+                                // but maybe keep local state for *isAnswered*?
+
+                                // For now, let's just load them. If you need sync 'isAnswered' state across devices, 
+                                // that needs writing back to Firestore.
+                                // Assuming we just want to LOAD questions:
+                                return { ...prev, questions: dbQuestions };
+                            });
+                        }
+                    }).catch(err => console.error("Failed to load questions:", err));
+
+                    // Real-time Listeners
+                    window.api.onQuestionsUpdate((updatedQuestions) => {
+                        console.log("Realtime update:", updatedQuestions);
+                        setData(prev => ({ ...prev, questions: updatedQuestions }));
+                    });
+                } else {
+                    console.error("Window API is not defined. Preload script might have failed.");
+                }
+            }, []);
+
+            useEffect(() => { localStorage.setItem('qDataClassic3', JSON.stringify(data)); }, [data]);
+            useEffect(() => { localStorage.setItem('qConfigClassic3', JSON.stringify(appConfig)); }, [appConfig]);
 
             // Resize & Fullscreen
             useEffect(() => {
-                if(!appConfig.presentationMode) { setScale(1); return; }
-                const rs = () => setScale(Math.min(window.innerWidth/1920, window.innerHeight/1080));
+                if (!appConfig.presentationMode) { setScale(1); return; }
+                const rs = () => setScale(Math.min(window.innerWidth / 1920, window.innerHeight / 1080));
                 window.addEventListener('resize', rs); rs(); return () => window.removeEventListener('resize', rs);
             }, [appConfig.presentationMode]);
 
@@ -691,7 +750,7 @@
                 const confetti = window.confetti;
                 if (typeof confetti !== 'function') return;
 
-                if(isWin) {
+                if (isWin) {
                     const end = Date.now() + 3000;
                     const colors = ['#d4af37', '#ffffff', '#1b4332'];
                     (function frame() {
@@ -702,16 +761,18 @@
                 } else confetti({ particleCount: 100, spread: 80, origin: { y: 0.7 }, colors: ['#1b4332', '#d4af37'] });
             };
 
-            const handleReset = () => setConfirmDialog({ show: true, message: appConfig.labels.resetDesc, onConfirm: () => {
-                setData(prev => ({ ...prev, questions: prev.questions.map(q => ({ ...q, isAnswered: false })), prizes: prev.prizes.map(p => ({ ...p, isTaken: false })) }));
-                setConfirmDialog({ show: false, message: '', onConfirm: null });
-            }});
+            const handleReset = () => setConfirmDialog({
+                show: true, message: appConfig.labels.resetDesc, onConfirm: () => {
+                    setData(prev => ({ ...prev, questions: prev.questions.map(q => ({ ...q, isAnswered: false })), prizes: prev.prizes.map(p => ({ ...p, isTaken: false })) }));
+                    setConfirmDialog({ show: false, message: '', onConfirm: null });
+                }
+            });
 
             const handleAnswer = (opt) => {
                 setData(prev => ({ ...prev, questions: prev.questions.map(q => q.id === activeQuestion.id ? { ...q, isAnswered: true } : q) }));
-                if (opt === activeQuestion.answer) { 
-                    setFeedback('correct'); 
-                    triggerConfetti(false); 
+                if (opt === activeQuestion.answer) {
+                    setFeedback('correct');
+                    triggerConfetti(false);
                 } else { setFeedback('wrong'); }
             };
 
@@ -744,7 +805,7 @@
                     const result = await response.json();
                     let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
                     if (!text) throw new Error("No data");
-                    
+
                     let cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
                     const newQ = JSON.parse(cleanedText).map((q, i) => ({ ...q, id: Date.now() + i, sectionId, isAnswered: false }));
                     setData(p => ({ ...p, questions: [...p.questions, ...newQ] }));
@@ -769,15 +830,15 @@
                     <div className="classic-card p-12 bg-white max-w-4xl w-full flex flex-col items-center shadow-2xl">
                         {appConfig.layoutImages?.sponsorLogo && (
                             <div style={{ height: `${8 * (appConfig.sponsorLogoScale || 1)}rem` }} className="mb-8 flex items-end justify-center transition-all duration-300">
-                                <img 
-                                    src={appConfig.layoutImages.sponsorLogo} 
+                                <img
+                                    src={appConfig.layoutImages.sponsorLogo}
                                     className="h-full w-auto object-contain"
                                 />
                             </div>
                         )}
                         <h1 className="text-7xl font-bold text-classic-dark mb-4 font-amiri border-b-2 border-classic-gold pb-4 px-8">{appConfig.labels.appTitle}</h1>
                         <p className="text-2xl text-gray-600 font-bold mb-10">{appConfig.labels.appSubtitle}</p>
-                        
+
                         {appConfig.sponsorName && (
                             <div className="flex items-center gap-3 bg-gray-50 px-6 py-2 rounded border border-gray-300 mb-10 shadow-sm">
                                 <span className="text-gray-500 font-bold">{appConfig.labels.sponsoredBy}</span>
@@ -785,7 +846,7 @@
                             </div>
                         )}
 
-                        <button onClick={()=>{setIntroShown(true); setView('home')}} className="btn-classic text-2xl font-bold py-4 px-16 rounded-full shadow-lg">
+                        <button onClick={() => { setIntroShown(true); setView('home') }} className="btn-classic text-2xl font-bold py-4 px-16 rounded-full shadow-lg">
                             {appConfig.labels.startQuiz}
                         </button>
                     </div>
@@ -795,21 +856,21 @@
             const content = (
                 <div className="h-full w-full relative flex flex-col font-cairo select-none" dir="rtl">
                     <OrientationGuard labels={appConfig.labels} />
-                    
+
                     <header className="absolute top-0 w-full p-4 z-30 flex justify-between items-center pointer-events-none bg-white/90 border-b border-gray-200 shadow-sm">
                         <div className="pointer-events-auto flex gap-4">
                             {view !== 'intro' && (
                                 <div className="flex items-center gap-2 px-2">
-                                    <Icon name="Moon" className="text-classic-dark"/>
+                                    <Icon name="Moon" className="text-classic-dark" />
                                     <span className="font-bold text-gray-700">{appConfig.labels.appTitle}</span>
                                 </div>
                             )}
                         </div>
                         <div className="flex gap-2 pointer-events-auto">
-                            {view!=='home' && view!=='intro' && <button onClick={()=>setView('home')} className="btn-outline px-4 py-1 rounded font-bold text-sm"><Icon name="Grid"/> {appConfig.labels.mainMenu}</button>}
-                            <button onClick={toggleFullscreen} className="btn-outline w-9 h-9 rounded flex items-center justify-center" title="ملء الشاشة"><Icon name={isFullscreen ? 'Minimize' : 'Maximize'}/></button>
+                            {view !== 'home' && view !== 'intro' && <button onClick={() => setView('home')} className="btn-outline px-4 py-1 rounded font-bold text-sm"><Icon name="Grid" /> {appConfig.labels.mainMenu}</button>}
+                            <button onClick={toggleFullscreen} className="btn-outline w-9 h-9 rounded flex items-center justify-center" title="ملء الشاشة"><Icon name={isFullscreen ? 'Minimize' : 'Maximize'} /></button>
                             {/* Settings Button with Lock */}
-                            <button onClick={handleSettingsClick} className="btn-outline w-9 h-9 rounded flex items-center justify-center"><Icon name="Settings"/></button>
+                            <button onClick={handleSettingsClick} className="btn-outline w-9 h-9 rounded flex items-center justify-center"><Icon name="Settings" /></button>
                         </div>
                     </header>
 
@@ -818,29 +879,29 @@
 
                         {view === 'home' && (
                             <div className="w-full h-full flex flex-col relative animate-fade-in">
-                                {appConfig.layoutImages?.topImage && <img src={appConfig.layoutImages.topImage} className="absolute top-0 w-full h-24 object-contain object-top opacity-100 pointer-events-none z-0"/>}
-                                {appConfig.layoutImages?.bottomImage && <img src={appConfig.layoutImages.bottomImage} className="absolute bottom-0 w-full h-24 object-contain object-bottom opacity-100 pointer-events-none z-0"/>}
-                                
+                                {appConfig.layoutImages?.topImage && <img src={appConfig.layoutImages.topImage} className="absolute top-0 w-full h-24 object-contain object-top opacity-100 pointer-events-none z-0" />}
+                                {appConfig.layoutImages?.bottomImage && <img src={appConfig.layoutImages.bottomImage} className="absolute bottom-0 w-full h-24 object-contain object-bottom opacity-100 pointer-events-none z-0" />}
+
                                 <div className="flex-1 flex w-full h-full items-center justify-center relative z-10 p-8 gap-8">
-                                    {appConfig.layoutImages?.rightImage && <img src={appConfig.layoutImages.rightImage} className="h-2/3 w-32 object-contain opacity-100 pointer-events-none hidden lg:block z-20" style={{transform: `scale(${appConfig.logoScale || 1})`}}/>}
-                                    {appConfig.layoutImages?.leftImage && <img src={appConfig.layoutImages.leftImage} className="h-2/3 w-32 object-contain opacity-100 pointer-events-none hidden lg:block z-20" style={{transform: `scale(${appConfig.logoScale || 1})`}}/>}
-                                    
+                                    {appConfig.layoutImages?.rightImage && <img src={appConfig.layoutImages.rightImage} className="h-2/3 w-32 object-contain opacity-100 pointer-events-none hidden lg:block z-20" style={{ transform: `scale(${appConfig.logoScale || 1})` }} />}
+                                    {appConfig.layoutImages?.leftImage && <img src={appConfig.layoutImages.leftImage} className="h-2/3 w-32 object-contain opacity-100 pointer-events-none hidden lg:block z-20" style={{ transform: `scale(${appConfig.logoScale || 1})` }} />}
+
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
                                         {data.sections.map((s, i) => (
-                                            <button key={s.id} onClick={()=>{setActiveSection(s); setView('section')}} className="classic-card group h-80 p-6 flex flex-col justify-between text-right hover:border-classic-gold transition-all duration-200 hover:-translate-y-1">
-                                                <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-md text-white mb-4 border-4 border-white" style={{background: s.color}}>
-                                                    <Icon name={s.icon}/>
+                                            <button key={s.id} onClick={() => { setActiveSection(s); setView('section') }} className="classic-card group h-80 p-6 flex flex-col justify-between text-right hover:border-classic-gold transition-all duration-200 hover:-translate-y-1">
+                                                <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-md text-white mb-4 border-4 border-white" style={{ background: s.color }}>
+                                                    <Icon name={s.icon} />
                                                 </div>
-                                                
+
                                                 <div>
                                                     <h3 className="text-3xl font-bold text-gray-800 mb-2 font-amiri">{s.title}</h3>
                                                     <div className="inline-flex items-center gap-2 bg-gray-100 px-3 py-1 rounded border border-gray-200">
                                                         <span className="w-2 h-2 rounded-full bg-classic-dark"></span>
-                                                        <span className="text-gray-600 font-bold text-sm">{data.questions.filter(q=>q.sectionId===s.id && !q.isAnswered).length} {appConfig.labels.questionsRemaining}</span>
+                                                        <span className="text-gray-600 font-bold text-sm">{data.questions.filter(q => q.sectionId === s.id && !q.isAnswered).length} {appConfig.labels.questionsRemaining}</span>
                                                     </div>
                                                 </div>
                                                 <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-classic-dark group-hover:text-white transition-colors self-end">
-                                                    <Icon name="ArrowRight" size="16"/>
+                                                    <Icon name="ArrowRight" size="16" />
                                                 </div>
                                             </button>
                                         ))}
@@ -853,20 +914,20 @@
                             <div className="w-full max-w-7xl animate-in zoom-in-95 p-8 h-full flex flex-col">
                                 <div className="flex justify-between items-center mb-8 bg-white p-4 rounded-lg border-2 border-gray-200 shadow-sm">
                                     <div className="flex items-center gap-4">
-                                        <button onClick={()=>setView('home')} className="btn-outline w-12 h-12 rounded-full flex items-center justify-center text-xl hover:bg-slate-100 transition shadow-sm" title={appConfig.labels.backToSections}>
-                                            <Icon name="ArrowRight"/>
+                                        <button onClick={() => setView('home')} className="btn-outline w-12 h-12 rounded-full flex items-center justify-center text-xl hover:bg-slate-100 transition shadow-sm" title={appConfig.labels.backToSections}>
+                                            <Icon name="ArrowRight" />
                                         </button>
                                         <h2 className="text-4xl font-bold text-classic-dark font-amiri">{activeSection.title}</h2>
                                     </div>
                                     <button onClick={() => generateAIQuestions(activeSection.title, activeSection.id)} disabled={isGenerating} className="btn-outline px-6 py-2 rounded flex items-center gap-2 font-bold">
-                                        {isGenerating ? <Icon name="Loader2"/> : <Icon name="Sparkles" className="text-purple-600"/>} 
+                                        {isGenerating ? <Icon name="Loader2" /> : <Icon name="Sparkles" className="text-purple-600" />}
                                         <span>{appConfig.labels.generateAI}</span>
                                     </button>
                                 </div>
                                 <div className="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-6 flex-1 content-start overflow-y-auto custom-scrollbar p-2">
-                                    {data.questions.filter(q=>q.sectionId===activeSection.id).map((q, idx) => (
-                                        <button key={q.id} disabled={q.isAnswered} onClick={()=>{setActiveQuestion(q); setTimer(30); setFeedback(null); setView('question'); speak(q.text);}} className={`aspect-square rounded-xl text-3xl font-bold flex items-center justify-center transition-all duration-200 shadow-sm border-2 ${q.isAnswered ? 'bg-gray-200 border-gray-300 text-gray-400' : 'bg-white border-gray-300 text-classic-dark hover:border-classic-gold hover:shadow-md'}`}>
-                                            {q.isAnswered ? <Icon name="CheckCircle"/> : <span className="font-amiri">{idx+1}</span>}
+                                    {data.questions.filter(q => q.sectionId === activeSection.id).map((q, idx) => (
+                                        <button key={q.id} disabled={q.isAnswered} onClick={() => { setActiveQuestion(q); setTimer(30); setFeedback(null); setView('question'); speak(q.text); }} className={`aspect-square rounded-xl text-3xl font-bold flex items-center justify-center transition-all duration-200 shadow-sm border-2 ${q.isAnswered ? 'bg-gray-200 border-gray-300 text-gray-400' : 'bg-white border-gray-300 text-classic-dark hover:border-classic-gold hover:shadow-md'}`}>
+                                            {q.isAnswered ? <Icon name="CheckCircle" /> : <span className="font-amiri">{idx + 1}</span>}
                                         </button>
                                     ))}
                                 </div>
@@ -878,38 +939,38 @@
                                 <div className="bg-white w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl flex flex-col border-4 border-classic-gold h-[85vh]">
                                     <div className="p-10 bg-classic-dark text-white text-center relative border-b-4 border-classic-gold flex-[0.4] flex flex-col items-center justify-center">
                                         <h3 className="text-4xl font-bold font-amiri leading-relaxed max-w-4xl">{activeQuestion.text}</h3>
-                                        
+
                                         {appConfig.enableTimer && !feedback && (
                                             <div className={`absolute top-6 right-6 text-2xl font-bold flex items-center gap-2 px-4 py-1 rounded bg-white/10 border ${timer < 10 ? 'text-red-300 border-red-300 animate-pulse' : 'text-classic-gold border-classic-gold'}`}>
-                                                <Icon name="Clock"/> {timer}
+                                                <Icon name="Clock" /> {timer}
                                             </div>
                                         )}
-                                        
-                                        <button onClick={()=>setView('section')} className="absolute top-6 left-6 w-10 h-10 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border border-white/30"><Icon name="X" size="24"/></button>
+
+                                        <button onClick={() => setView('section')} className="absolute top-6 left-6 w-10 h-10 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border border-white/30"><Icon name="X" size="24" /></button>
                                     </div>
-                                    
+
                                     <div className="p-8 bg-gray-50 flex-1 flex flex-col justify-center relative">
                                         {!feedback ? (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
                                                 {activeQuestion.options.map((op, i) => (
-                                                    <button key={i} onClick={()=>handleAnswer(op)} className="group p-6 text-2xl font-bold rounded-xl border-2 border-gray-300 bg-white text-gray-700 hover:border-classic-dark hover:bg-emerald-50 hover:text-classic-dark transition-all shadow-sm flex items-center">
-                                                        <span className="w-10 h-10 rounded bg-gray-100 border border-gray-300 flex items-center justify-center ml-4 text-sm font-bold group-hover:bg-classic-dark group-hover:text-white">{['أ','ب','ج','د'][i]}</span>
+                                                    <button key={i} onClick={() => handleAnswer(op)} className="group p-6 text-2xl font-bold rounded-xl border-2 border-gray-300 bg-white text-gray-700 hover:border-classic-dark hover:bg-emerald-50 hover:text-classic-dark transition-all shadow-sm flex items-center">
+                                                        <span className="w-10 h-10 rounded bg-gray-100 border border-gray-300 flex items-center justify-center ml-4 text-sm font-bold group-hover:bg-classic-dark group-hover:text-white">{['أ', 'ب', 'ج', 'د'][i]}</span>
                                                         {op}
                                                     </button>
                                                 ))}
                                             </div>
                                         ) : (
                                             <div className="text-center animate-fade-in flex flex-col items-center justify-center h-full">
-                                                <div className={`w-24 h-24 rounded-full flex items-center justify-center text-5xl mb-4 border-4 shadow-lg ${feedback==='correct'?'bg-emerald-100 text-emerald-700 border-emerald-500':'bg-red-100 text-red-700 border-red-500'}`}>
-                                                    <Icon name={feedback==='correct'?'CheckCircle':'XCircle'}/>
+                                                <div className={`w-24 h-24 rounded-full flex items-center justify-center text-5xl mb-4 border-4 shadow-lg ${feedback === 'correct' ? 'bg-emerald-100 text-emerald-700 border-emerald-500' : 'bg-red-100 text-red-700 border-red-500'}`}>
+                                                    <Icon name={feedback === 'correct' ? 'CheckCircle' : 'XCircle'} />
                                                 </div>
-                                                <h2 className="text-4xl font-bold mb-2 font-amiri text-gray-800">{feedback==='correct'?appConfig.labels.correctTitle:appConfig.labels.wrongTitle}</h2>
-                                                <p className="text-xl text-gray-600 mb-8 font-bold">{feedback==='correct'?appConfig.labels.correctMessage:appConfig.labels.wrongMessage}</p>
-                                                
+                                                <h2 className="text-4xl font-bold mb-2 font-amiri text-gray-800">{feedback === 'correct' ? appConfig.labels.correctTitle : appConfig.labels.wrongTitle}</h2>
+                                                <p className="text-xl text-gray-600 mb-8 font-bold">{feedback === 'correct' ? appConfig.labels.correctMessage : appConfig.labels.wrongMessage}</p>
+
                                                 <div className="flex gap-4">
-                                                    {feedback === 'correct' ? 
-                                                        <button onClick={()=>setView('prizes')} className="btn-gold px-12 py-4 rounded font-bold text-xl shadow-lg flex items-center gap-3"><Icon name="Gift"/> {appConfig.labels.goToPrizes}</button> :
-                                                        <button onClick={()=>setView('section')} className="btn-outline px-12 py-4 rounded font-bold text-xl">{appConfig.labels.backToQuestions}</button>
+                                                    {feedback === 'correct' ?
+                                                        <button onClick={() => setView('prizes')} className="btn-gold px-12 py-4 rounded font-bold text-xl shadow-lg flex items-center gap-3"><Icon name="Gift" /> {appConfig.labels.goToPrizes}</button> :
+                                                        <button onClick={() => setView('section')} className="btn-outline px-12 py-4 rounded font-bold text-xl">{appConfig.labels.backToQuestions}</button>
                                                     }
                                                 </div>
 
@@ -929,10 +990,10 @@
                                 <h2 className="text-6xl font-bold mb-12 text-classic-dark font-amiri border-b-4 border-classic-gold px-12 pb-2">{appConfig.labels.choosePrize}</h2>
                                 <div className="grid grid-cols-4 gap-8 w-full max-w-6xl">
                                     {data.prizes.map((p, idx) => (
-                                        <button key={p.id} disabled={p.isTaken} onClick={()=>selectPrize(p.id)} className={`classic-card h-72 flex flex-col items-center justify-center transition-all duration-300 transform ${p.isTaken ? 'bg-gray-200 grayscale opacity-60 cursor-not-allowed' : 'hover:-translate-y-2 hover:shadow-xl hover:border-classic-gold'}`}>
-                                            {p.isTaken ? <Icon name="CheckCircle" size="64" className="text-gray-400"/> : (
+                                        <button key={p.id} disabled={p.isTaken} onClick={() => selectPrize(p.id)} className={`classic-card h-72 flex flex-col items-center justify-center transition-all duration-300 transform ${p.isTaken ? 'bg-gray-200 grayscale opacity-60 cursor-not-allowed' : 'hover:-translate-y-2 hover:shadow-xl hover:border-classic-gold'}`}>
+                                            {p.isTaken ? <Icon name="CheckCircle" size="64" className="text-gray-400" /> : (
                                                 <>
-                                                    <div className="text-8xl text-classic-gold animate-bounce" style={{animationDuration:'3s'}}><Icon name="Gift"/></div>
+                                                    <div className="text-8xl text-classic-gold animate-bounce" style={{ animationDuration: '3s' }}><Icon name="Gift" /></div>
                                                     <div className="mt-6 text-classic-dark font-bold text-lg opacity-0 group-hover:opacity-100 transition">{appConfig.labels.clickToOpen}</div>
                                                 </>
                                             )}
@@ -951,14 +1012,14 @@
                                     <h2 className="text-6xl font-bold text-classic-gold mb-4 font-amiri">{appConfig.labels.congrats}</h2>
                                     <p className="text-3xl text-gray-700 mb-8 font-bold">{appConfig.labels.youWon}</p>
                                     <div className="bg-classic-dark text-white px-12 py-4 rounded text-4xl font-bold mb-10 shadow-lg border-2 border-classic-gold font-amiri">{selectedPrize.name}</div>
-                                    <button onClick={()=>setView('section')} className="btn-gold px-16 py-4 rounded font-bold text-2xl shadow-lg">{appConfig.labels.continue}</button>
+                                    <button onClick={() => setView('section')} className="btn-gold px-16 py-4 rounded font-bold text-2xl shadow-lg">{appConfig.labels.continue}</button>
                                 </div>
                             </div>
                         )}
                     </main>
 
                     {showPinModal && <PinModal isOpen={showPinModal} onClose={() => setShowPinModal(false)} onSuccess={handlePinSuccess} labels={appConfig.labels} currentPin={appConfig.adminPin} />}
-                    {showSettings && <SettingsModal appConfig={appConfig} setAppConfig={setAppConfig} data={data} setData={setData} onClose={()=>setShowSettings(false)} onReset={handleReset} apiKey={apiKey} />}
+                    {showSettings && <SettingsModal appConfig={appConfig} setAppConfig={setAppConfig} data={data} setData={setData} onClose={() => setShowSettings(false)} onReset={handleReset} apiKey={apiKey} />}
                     {confirmDialog.show && <ConfirmModal message={confirmDialog.message} onConfirm={confirmDialog.onConfirm} onCancel={() => setConfirmDialog({ show: false, message: '', onConfirm: null })} labels={appConfig.labels} />}
                 </div>
             );
@@ -968,7 +1029,7 @@
                     <ClassicBackground config={appConfig} />
                     {appConfig.presentationMode ? (
                         <div className="fixed inset-0 flex items-center justify-center bg-black">
-                            <div style={{width: 1920, height: 1080, transform: `scale(${scale})`}} className="relative overflow-hidden bg-white shadow-2xl border-4 border-gray-800">{content}</div>
+                            <div style={{ width: 1920, height: 1080, transform: `scale(${scale})` }} className="relative overflow-hidden bg-white shadow-2xl border-4 border-gray-800">{content}</div>
                         </div>
                     ) : content}
                 </>
@@ -979,4 +1040,5 @@
         root.render(<App />);
     </script>
 </body>
+
 </html>

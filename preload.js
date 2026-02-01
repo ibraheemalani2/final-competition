@@ -1,5 +1,5 @@
 const { contextBridge } = require('electron');
-const { db } = require('./firebase-config');
+const { db } = require('./firebase-config.js');
 const { collection, getDocs, onSnapshot } = require('firebase/firestore');
 
 contextBridge.exposeInMainWorld('api', {
