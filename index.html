@@ -265,22 +265,41 @@
         );
 
         // --- PIN Modal ---
-        const PinModal = ({ isOpen, onClose, onSuccess, labels, currentPin = "1234" }) => {
+        const PinModal = ({ isOpen, onClose, onSuccess, labels }) => {
             const [pin, setPin] = useState("");
             const [error, setError] = useState(false);
+            const [isLoading, setIsLoading] = useState(false);
             const inputRef = useRef(null);
 
             useEffect(() => {
                 if (isOpen) {
                     setPin("");
                     setError(false);
+                    setIsLoading(false);
                     setTimeout(() => inputRef.current?.focus(), 100);
                 }
             }, [isOpen]);
 
-            const handleSubmit = (e) => {
+            const handleSubmit = async (e) => {
                 e.preventDefault();
-                if (pin === currentPin) {
+                if (isLoading) return;
+
+                setIsLoading(true);
+                let isValid = false;
+
+                try {
+                    if (window.api && window.api.checkAdminPassword) {
+                        isValid = await window.api.checkAdminPassword(pin);
+                    } else {
+                        console.error("API checkAdminPassword not available");
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+
+                setIsLoading(false);
+
+                if (isValid) {
                     onSuccess();
                     onClose();
                 } else {
@@ -306,14 +325,17 @@
                                     type="password"
                                     value={pin}
                                     onChange={(e) => setPin(e.target.value)}
-                                    maxLength="4"
-                                    className={`w-full p-4 border-2 rounded-lg text-center text-2xl font-bold tracking-widest mb-4 outline-none transition ${error ? 'border-red-500 bg-red-50' : 'border-classic-gold focus:border-classic-dark'}`}
+                                    maxLength="20"
+                                    disabled={isLoading}
+                                    className={`w-full p-4 border-2 rounded-lg text-center text-2xl font-bold tracking-widest mb-4 outline-none transition ${error ? 'border-red-500 bg-red-50' : 'border-classic-gold focus:border-classic-dark'} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     placeholder="••••"
                                 />
                                 {error && <p className="text-red-500 text-sm font-bold mb-4 animate-pulse">{labels.incorrectPin}</p>}
                                 <div className="flex gap-2">
-                                    <button type="button" onClick={onClose} className="flex-1 py-3 rounded bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition">{labels.confirmNo}</button>
-                                    <button type="submit" className="flex-1 py-3 rounded bg-classic-dark text-white font-bold hover:bg-classic-green transition">{labels.confirmReset}</button>
+                                    <button type="button" onClick={onClose} disabled={isLoading} className="flex-1 py-3 rounded bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition disabled:opacity-50">{labels.confirmNo}</button>
+                                    <button type="submit" disabled={isLoading} className="flex-1 py-3 rounded bg-classic-dark text-white font-bold hover:bg-classic-green transition disabled:opacity-50 display-flex items-center justify-center gap-2">
+                                        {isLoading ? <Icon name="Loader2" /> : labels.confirmReset}
+                                    </button>
                                 </div>
                             </form>
                         </div>
@@ -436,9 +458,9 @@
                     <div className="bg-white rounded-lg w-full max-w-5xl h-[85vh] flex overflow-hidden shadow-2xl border-4 border-classic-gold">
                         <div className="w-64 bg-classic-dark text-white p-4 flex flex-col gap-2 overflow-y-auto">
                             <h2 className="text-xl font-bold text-classic-gold mb-4 flex items-center gap-2"><Icon name="Settings" /> الإعدادات</h2>
-                            {['general', 'gameplay', 'security', 'intro', 'home_images', 'sections', 'questions', 'prizes', 'texts', 'data'].map(t => (
+                            {['general', 'gameplay', 'intro', 'home_images', 'sections', 'questions', 'prizes', 'texts', 'data'].map(t => (
                                 <button key={t} onClick={() => setTab(t)} className={`p-3 rounded text-right font-bold transition ${tab === t ? 'bg-classic-gold text-classic-dark' : 'hover:bg-white/10'}`}>
-                                    {t === 'general' ? 'المظهر' : t === 'gameplay' ? 'اللعب' : t === 'security' ? 'الأمان' : t === 'intro' ? 'البداية' : t === 'sections' ? 'الأقسام' : t === 'questions' ? 'الأسئلة' : t === 'prizes' ? 'الجوائز' : t === 'home_images' ? 'الصور' : t === 'texts' ? 'النصوص' : 'البيانات'}
+                                    {t === 'general' ? 'المظهر' : t === 'gameplay' ? 'اللعب' : t === 'intro' ? 'البداية' : t === 'sections' ? 'الأقسام' : t === 'questions' ? 'الأسئلة' : t === 'prizes' ? 'الجوائز' : t === 'home_images' ? 'الصور' : t === 'texts' ? 'النصوص' : 'البيانات'}
                                 </button>
                             ))}
                             <button onClick={onClose} className="mt-auto p-3 rounded border border-red-400 text-red-300 hover:bg-red-900/20 font-bold">إغلاق</button>
@@ -456,20 +478,6 @@
                                         <span>عرض ملء الشاشة (16:9)</span>
                                         <input type="checkbox" checked={appConfig.presentationMode} onChange={e => setAppConfig(p => ({ ...p, presentationMode: e.target.checked }))} />
                                     </div>
-                                </div>
-                            )}
-
-                            {tab === 'security' && (
-                                <div className="space-y-4 classic-card p-6">
-                                    <h3 className="font-bold mb-4 text-classic-dark flex items-center gap-2"><Icon name="Lock" /> إعدادات الأمان</h3>
-                                    <div>
-                                        <label className="block text-sm font-bold mb-2">تغيير رمز المرور (Admin PIN)</label>
-                                        <div className="flex gap-2">
-                                            <input type="text" value={newPin} onChange={e => setNewPin(e.target.value)} className="p-2 border rounded flex-1" placeholder="الرمز الجديد" />
-                                            <button onClick={handleChangePin} className="btn-classic px-4 rounded">حفظ</button>
-                                        </div>
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-2">الرمز الحالي يستخدم للدخول إلى لوحة التحكم.</p>
                                 </div>
                             )}
 
