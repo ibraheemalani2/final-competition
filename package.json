@@ -10,9 +10,19 @@
   },
   "build": {
     "appId": "com.example.final-competetion",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "ibraheemalani2",
+        "repo": "final-competition"
+      }
+    ],
     "productName": "المسابقة النهائية",
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "publish": [
+        "github"
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -28,6 +38,7 @@
     "electron-builder": "^26.7.0"
   },
   "dependencies": {
+    "electron-updater": "^6.7.3",
     "firebase": "^12.8.0"
   }
 }

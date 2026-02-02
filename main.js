@@ -1,5 +1,6 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
+const { autoUpdater } = require('electron-updater');
 
 function createWindow() {
     // Create the browser window.
@@ -25,6 +26,7 @@ function createWindow() {
 // This method will be called when Electron has finished initialization
 app.whenReady().then(() => {
     createWindow();
+    autoUpdater.checkForUpdatesAndNotify();
 
     app.on('activate', function () {
         // On macOS it's common to re-create a window in the app when the
