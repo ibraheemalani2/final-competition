@@ -1,0 +1,1572 @@
+const {
+  useState,
+  useEffect,
+  useRef,
+  useMemo
+} = React;
+
+// --- Icons ---
+const Icon = ({
+  name,
+  className = "",
+  size = ""
+}) => {
+  const iconMap = {
+    BookOpen: "fa-book-open",
+    Moon: "fa-moon",
+    Star: "fa-star",
+    Trophy: "fa-trophy",
+    ArrowRight: "fa-arrow-right",
+    Settings: "fa-cog",
+    Gift: "fa-gift",
+    CheckCircle: "fa-check-circle",
+    XCircle: "fa-times-circle",
+    Sparkles: "fa-magic",
+    Loader2: "fa-spinner fa-spin",
+    Info: "fa-info-circle",
+    Plus: "fa-plus",
+    Trash2: "fa-trash-alt",
+    Edit3: "fa-pen",
+    HelpCircle: "fa-question-circle",
+    AlertTriangle: "fa-exclamation-triangle",
+    X: "fa-times",
+    Upload: "fa-upload",
+    Palette: "fa-palette",
+    Layout: "fa-layer-group",
+    MessageSquare: "fa-comment-alt",
+    ImageIcon: "fa-image",
+    Grid: "fa-th-large",
+    Monitor: "fa-desktop",
+    CheckSquare: "fa-check-square",
+    RotateCcw: "fa-undo",
+    Download: "fa-download",
+    UploadCloud: "fa-cloud-upload-alt",
+    Save: "fa-save",
+    Play: "fa-play",
+    User: "fa-user-tie",
+    Images: "fa-images",
+    Mobile: "fa-mobile-alt",
+    Maximize: "fa-expand",
+    Minimize: "fa-compress",
+    Medal: "fa-medal",
+    Clock: "fa-clock",
+    Gamepad: "fa-gamepad",
+    Type: "fa-font",
+    Lock: "fa-lock",
+    Key: "fa-key",
+    Unlock: "fa-unlock"
+  };
+  return /*#__PURE__*/React.createElement("i", {
+    className: `fas ${iconMap[name] || 'fa-circle'} ${className}`,
+    style: {
+      fontSize: size ? size + 'px' : 'inherit'
+    }
+  });
+};
+
+// --- Data & Config ---
+const DEFAULT_LABELS = {
+  mainMenu: 'الرئيسية',
+  controlPanel: 'الإعدادات',
+  appTitle: 'المسابقة الكبرى',
+  appSubtitle: 'العلم نور',
+  chooseCategory: 'اختر المجال',
+  questionsRemaining: 'سؤال',
+  backToSections: 'رجوع',
+  generateAI: 'توليد (AI)',
+  generating: 'جاري التحضير...',
+  answered: 'مجاب',
+  clickToOpen: 'فتح',
+  sectionCompleted: 'أحسنت!',
+  correctTitle: 'إجابة صحيحة',
+  correctMessage: 'زادك الله علمًا وتوفيقًا.',
+  wrongTitle: 'إجابة خاطئة',
+  wrongMessage: 'لا بأس، حاول مرة أخرى.',
+  goToPrizes: 'استلام الجائزة',
+  backToQuestions: 'عودة',
+  explainAI: 'تفسير (AI)',
+  knowAnswerAI: 'كشف الجواب (AI)',
+  choosePrize: 'اختر الهدية',
+  prizeTaken: 'تم',
+  congrats: 'مبارك!',
+  youWon: 'حصلت على',
+  continue: 'استمرار',
+  dangerZone: 'منطقة الخطر',
+  resetTitle: 'تصفير',
+  resetDesc: 'إعادة تعيين البيانات.',
+  confirmReset: 'تأكيد',
+  alertTitle: 'تنبيه',
+  confirmYes: 'نعم',
+  confirmNo: 'لا',
+  dataManagement: 'البيانات',
+  exportData: 'تصدير',
+  importData: 'استيراد',
+  autoSaveInfo: 'حفظ تلقائي',
+  sponsoredBy: 'برعاية',
+  startQuiz: 'ابدأ المسابقة',
+  rotateDevice: 'يرجى تدوير الجهاز',
+  time: 'الوقت',
+  enterPin: 'أدخل رمز المرور',
+  incorrectPin: 'رمز خاطئ',
+  changePin: 'تغيير الرمز',
+  newPin: 'الرمز الجديد',
+  pinUpdated: 'تم تحديث الرمز'
+};
+const INITIAL_DATA = {
+  sections: [{
+    id: 1,
+    title: 'القرآن الكريم',
+    icon: 'BookOpen',
+    color: '#1b4332'
+  }, {
+    id: 2,
+    title: 'السيرة النبوية',
+    icon: 'Moon',
+    color: '#1e40af'
+  }, {
+    id: 3,
+    title: 'الفقه والعقيدة',
+    icon: 'Star',
+    color: '#b45309'
+  }],
+  questions: [],
+  prizes: [{
+    id: 1,
+    name: 'عطر فاخر',
+    image: 'https://cdn-icons-png.flaticon.com/512/2829/2829929.png',
+    isTaken: false
+  }, {
+    id: 2,
+    name: 'مسبحة إلكترونية',
+    image: 'https://cdn-icons-png.flaticon.com/512/4393/4393963.png',
+    isTaken: false
+  }, {
+    id: 3,
+    name: 'مصحف مذهب',
+    image: 'https://cdn-icons-png.flaticon.com/512/3023/3023573.png',
+    isTaken: false
+  }, {
+    id: 4,
+    name: 'بطاقة شراء',
+    image: 'https://cdn-icons-png.flaticon.com/512/10530/10530869.png',
+    isTaken: false
+  }]
+};
+
+// --- Visual Components ---
+const ClassicBackground = ({
+  config
+}) => {
+  const style = {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 0,
+    pointerEvents: 'none',
+    backgroundColor: '#fdfbf7',
+    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+  };
+  if (config.bgMode === 'image' && config.customBgImage) {
+    style.backgroundImage = `url("${config.customBgImage}")`;
+    style.backgroundSize = 'cover';
+    style.backgroundPosition = 'center';
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    style: style
+  }, config.baseTransparent && /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-0 bg-white/70 backdrop-blur-[1px]"
+  }));
+};
+const OrientationGuard = ({
+  labels
+}) => /*#__PURE__*/React.createElement("div", {
+  id: "portrait-warning",
+  className: "fixed inset-0 z-[200] bg-classic-dark flex flex-col items-center justify-center text-white p-8 text-center animate-fade-in border-4 border-classic-gold m-4 rounded-xl"
+}, /*#__PURE__*/React.createElement(Icon, {
+  name: "Mobile",
+  size: "48",
+  className: "text-classic-gold mb-4 animate-bounce"
+}), /*#__PURE__*/React.createElement("h2", {
+  className: "text-3xl font-bold mb-4 text-classic-gold font-amiri"
+}, labels.rotateDevice));
+
+// --- PIN Modal ---
+const PinModal = ({
+  isOpen,
+  onClose,
+  onSuccess,
+  labels
+}) => {
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef(null);
+  useEffect(() => {
+    if (isOpen) {
+      setPin("");
+      setError(false);
+      setIsLoading(false);
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [isOpen]);
+  const handleSubmit = async e => {
+    e.preventDefault();
+    if (isLoading) return;
+    setIsLoading(true);
+    let isValid = false;
+    try {
+      if (window.api && window.api.checkAdminPassword) {
+        isValid = await window.api.checkAdminPassword(pin);
+      } else {
+        console.error("API checkAdminPassword not available");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    setIsLoading(false);
+    if (isValid) {
+      onSuccess();
+      onClose();
+    } else {
+      setError(true);
+      setPin("");
+      setTimeout(() => setError(false), 2000);
+    }
+  };
+  if (!isOpen) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-[160] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-white rounded-xl p-8 max-w-sm w-full shadow-2xl border-t-8 border-classic-dark animate-fade-in"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-center"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-16 h-16 bg-classic-bg rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-classic-gold"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: error ? "XCircle" : "Lock",
+    size: "32",
+    className: error ? "text-red-500" : "text-classic-dark"
+  })), /*#__PURE__*/React.createElement("h3", {
+    className: "text-xl font-bold text-classic-dark mb-6 font-amiri"
+  }, labels.enterPin), /*#__PURE__*/React.createElement("form", {
+    onSubmit: handleSubmit
+  }, /*#__PURE__*/React.createElement("input", {
+    ref: inputRef,
+    type: "password",
+    value: pin,
+    onChange: e => setPin(e.target.value),
+    maxLength: "20",
+    disabled: isLoading,
+    className: `w-full p-4 border-2 rounded-lg text-center text-2xl font-bold tracking-widest mb-4 outline-none transition ${error ? 'border-red-500 bg-red-50' : 'border-classic-gold focus:border-classic-dark'} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`,
+    placeholder: "\u2022\u2022\u2022\u2022"
+  }), error && /*#__PURE__*/React.createElement("p", {
+    className: "text-red-500 text-sm font-bold mb-4 animate-pulse"
+  }, labels.incorrectPin), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onClose,
+    disabled: isLoading,
+    className: "flex-1 py-3 rounded bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition disabled:opacity-50"
+  }, labels.confirmNo), /*#__PURE__*/React.createElement("button", {
+    type: "submit",
+    disabled: isLoading,
+    className: "flex-1 py-3 rounded bg-classic-dark text-white font-bold hover:bg-classic-green transition disabled:opacity-50 display-flex items-center justify-center gap-2"
+  }, isLoading ? /*#__PURE__*/React.createElement(Icon, {
+    name: "Loader2"
+  }) : labels.confirmReset))))));
+};
+
+// --- Settings Modal ---
+const SettingsModal = ({
+  appConfig,
+  setAppConfig,
+  data,
+  setData,
+  onClose,
+  onReset,
+  apiKey
+}) => {
+  const [tab, setTab] = useState('general');
+  const [editingId, setEditingId] = useState(null);
+  const [sectionForm, setSectionForm] = useState({
+    title: '',
+    color: '#1b4332'
+  });
+  const [questionForm, setQuestionForm] = useState({
+    sectionId: '',
+    text: '',
+    type: 'choice',
+    op1: '',
+    op2: '',
+    op3: '',
+    op4: '',
+    answer: ''
+  });
+  const [prizeForm, setPrizeForm] = useState({
+    name: ''
+  });
+  const [newPin, setNewPin] = useState("");
+  const prizeFileInputRef = useRef(null);
+  const handleConfigImageUpload = (key, e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAppConfig(prev => {
+          if (key === 'customBgImage') return {
+            ...prev,
+            bgMode: 'image',
+            customBgImage: reader.result
+          };
+          return {
+            ...prev,
+            layoutImages: {
+              ...prev.layoutImages,
+              [key]: reader.result
+            }
+          };
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  const removeConfigImage = key => {
+    setAppConfig(prev => {
+      const newLayout = {
+        ...prev.layoutImages
+      };
+      delete newLayout[key];
+      return {
+        ...prev,
+        layoutImages: newLayout
+      };
+    });
+  };
+  const updateLabel = (key, value) => setAppConfig(prev => ({
+    ...prev,
+    labels: {
+      ...prev.labels,
+      [key]: value
+    }
+  }));
+  const handleExport = () => {
+    const exportData = {
+      appConfig,
+      data,
+      timestamp: new Date().toISOString()
+    };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData));
+    const anchor = document.createElement('a');
+    anchor.href = dataStr;
+    anchor.download = "quiz_data.json";
+    anchor.click();
+  };
+  const handleImport = e => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = event => {
+        try {
+          const imported = JSON.parse(event.target.result);
+          if (imported.data && imported.appConfig) {
+            if (window.confirm("تأكيد استبدال البيانات؟")) {
+              setData(imported.data);
+              setAppConfig(imported.appConfig);
+              alert("تم!");
+            }
+          } else alert("ملف غير صالح");
+        } catch (err) {
+          alert("خطأ");
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+  const saveSection = e => {
+    e.preventDefault();
+    if (editingId) setData(prev => ({
+      ...prev,
+      sections: prev.sections.map(s => s.id === editingId ? {
+        ...s,
+        title: sectionForm.title,
+        color: sectionForm.color
+      } : s)
+    }));else setData(prev => ({
+      ...prev,
+      sections: [...prev.sections, {
+        id: Date.now(),
+        title: sectionForm.title,
+        icon: 'Star',
+        color: sectionForm.color
+      }]
+    }));
+    setEditingId(null);
+    setSectionForm({
+      title: '',
+      color: '#1b4332'
+    });
+  };
+  const saveQuestion = async e => {
+    e.preventDefault();
+    const {
+      text,
+      type,
+      op1,
+      op2,
+      op3,
+      op4,
+      answer,
+      sectionId
+    } = questionForm;
+    if (!sectionId || !answer) return alert("البيانات ناقصة");
+    const sId = parseInt(sectionId);
+    const options = type === 'boolean' ? ['صح', 'خطأ'] : [op1, op2, op3, op4];
+
+    // Prepare data for Firestore (or local)
+    // Note: We don't need 'id' here for new items, Firestore generates it.
+    // We don't overwrite isAnswered on edit unless intended.
+    const qData = {
+      text,
+      type,
+      options,
+      answer,
+      sectionId: sId
+    };
+    if (window.api && window.api.addQuestion) {
+      try {
+        if (editingId) {
+          await window.api.updateQuestion(editingId, qData);
+        } else {
+          await window.api.addQuestion({
+            ...qData,
+            isAnswered: false
+          });
+        }
+      } catch (err) {
+        console.error("Error saving to Firestore:", err);
+        alert("حدث خطأ أثناء الحفظ في قاعدة البيانات");
+      }
+    } else {
+      // Fallback to local state if API is not available
+      const localQData = {
+        ...qData,
+        id: Date.now(),
+        isAnswered: false
+      };
+      if (editingId) setData(prev => ({
+        ...prev,
+        questions: prev.questions.map(q => q.id === editingId ? {
+          ...q,
+          ...qData
+        } : q)
+      }));else setData(prev => ({
+        ...prev,
+        questions: [...prev.questions, localQData]
+      }));
+    }
+    setEditingId(null);
+    setQuestionForm({
+      sectionId: '',
+      text: '',
+      type: 'choice',
+      op1: '',
+      op2: '',
+      op3: '',
+      op4: '',
+      answer: ''
+    });
+  };
+  const savePrize = e => {
+    e.preventDefault();
+    const file = prizeFileInputRef.current?.files[0];
+    const save = img => {
+      if (editingId) setData(prev => ({
+        ...prev,
+        prizes: prev.prizes.map(p => p.id === editingId ? {
+          ...p,
+          name: prizeForm.name,
+          image: img || p.image
+        } : p)
+      }));else setData(prev => ({
+        ...prev,
+        prizes: [...prev.prizes, {
+          id: Date.now(),
+          name: prizeForm.name,
+          image: img || 'https://cdn-icons-png.flaticon.com/512/3023/3023573.png',
+          isTaken: false
+        }]
+      }));
+      setEditingId(null);
+      setPrizeForm({
+        name: ''
+      });
+    };
+    if (file) {
+      const r = new FileReader();
+      r.onloadend = () => save(r.result);
+      r.readAsDataURL(file);
+    } else save(null);
+  };
+  const handleChangePin = async () => {
+    if (newPin.length >= 4) {
+      try {
+        if (window.api && window.api.changeAdminPassword) {
+          const success = await window.api.changeAdminPassword(newPin);
+          if (success) {
+            setAppConfig(prev => ({
+              ...prev,
+              adminPin: newPin
+            }));
+            setNewPin("");
+            alert(appConfig.labels.pinUpdated || "تم تحديث الرمز");
+          } else {
+            alert("حدث خطأ أثناء تحديث الرمز في قاعدة البيانات");
+          }
+        } else {
+          // Fallback for local changes if API is missing (dev mode without electron/firebase properly loaded)
+          setAppConfig(prev => ({
+            ...prev,
+            adminPin: newPin
+          }));
+          setNewPin("");
+          alert(appConfig.labels.pinUpdated || "تم تحديث الرمز (محلياً فقط)");
+        }
+      } catch (error) {
+        console.error("Error in handleChangePin:", error);
+        alert("حدث خطأ غير متوقع");
+      }
+    } else {
+      alert("الرمز يجب أن يكون 4 أرقام على الأقل");
+    }
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 text-slate-800 font-cairo"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-white rounded-lg w-full max-w-5xl h-[85vh] flex overflow-hidden shadow-2xl border-4 border-classic-gold"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-64 bg-classic-dark text-white p-4 flex flex-col gap-2 overflow-y-auto"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-xl font-bold text-classic-gold mb-4 flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "Settings"
+  }), " \u0627\u0644\u0625\u0639\u062F\u0627\u062F\u0627\u062A"), ['general', 'gameplay', 'security', 'intro', 'home_images', 'sections', 'questions', 'prizes', 'texts', 'data'].map(t => /*#__PURE__*/React.createElement("button", {
+    key: t,
+    onClick: () => setTab(t),
+    className: `p-3 rounded text-right font-bold transition ${tab === t ? 'bg-classic-gold text-classic-dark' : 'hover:bg-white/10'}`
+  }, t === 'general' ? 'المظهر' : t === 'gameplay' ? 'اللعب' : t === 'security' ? 'الأمان' : t === 'intro' ? 'البداية' : t === 'sections' ? 'الأقسام' : t === 'questions' ? 'الأسئلة' : t === 'prizes' ? 'الجوائز' : t === 'home_images' ? 'الصور' : t === 'texts' ? 'النصوص' : 'البيانات')), /*#__PURE__*/React.createElement("button", {
+    onClick: onClose,
+    className: "mt-auto p-3 rounded border border-red-400 text-red-300 hover:bg-red-900/20 font-bold"
+  }, "\u0625\u063A\u0644\u0627\u0642")), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 bg-gray-50 p-6 overflow-y-auto"
+  }, tab === 'general' && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "classic-card p-6"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "font-bold mb-4 text-classic-dark"
+  }, "\u0627\u0644\u062E\u0644\u0641\u064A\u0629"), /*#__PURE__*/React.createElement("input", {
+    type: "file",
+    onChange: e => handleConfigImageUpload('customBgImage', e),
+    className: "block w-full text-sm mb-2"
+  }), /*#__PURE__*/React.createElement("label", {
+    className: "flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: appConfig.baseTransparent,
+    onChange: e => setAppConfig(p => ({
+      ...p,
+      baseTransparent: e.target.checked
+    }))
+  }), " \u062A\u0639\u062A\u064A\u0645 \u0627\u0644\u062E\u0644\u0641\u064A\u0629")), /*#__PURE__*/React.createElement("div", {
+    className: "classic-card p-6 flex justify-between"
+  }, /*#__PURE__*/React.createElement("span", null, "\u0639\u0631\u0636 \u0645\u0644\u0621 \u0627\u0644\u0634\u0627\u0634\u0629 (16:9)"), /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: appConfig.presentationMode,
+    onChange: e => setAppConfig(p => ({
+      ...p,
+      presentationMode: e.target.checked
+    }))
+  }))), tab === 'security' && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-4 classic-card p-6"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "font-bold mb-4 text-classic-dark flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "Lock"
+  }), " \u0625\u0639\u062F\u0627\u062F\u0627\u062A \u0627\u0644\u0623\u0645\u0627\u0646"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "block text-sm font-bold mb-2"
+  }, "\u062A\u063A\u064A\u064A\u0631 \u0631\u0645\u0632 \u0627\u0644\u0645\u0631\u0648\u0631 (Admin PIN)"), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: newPin,
+    onChange: e => setNewPin(e.target.value),
+    className: "p-2 border rounded flex-1",
+    placeholder: "\u0627\u0644\u0631\u0645\u0632 \u0627\u0644\u062C\u062F\u064A\u062F"
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: handleChangePin,
+    className: "btn-classic px-4 rounded"
+  }, "\u062D\u0641\u0638"))), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-gray-500 mt-2"
+  }, "\u0627\u0644\u0631\u0645\u0632 \u0627\u0644\u062D\u0627\u0644\u064A \u064A\u0633\u062A\u062E\u062F\u0645 \u0644\u0644\u062F\u062E\u0648\u0644 \u0625\u0644\u0649 \u0644\u0648\u062D\u0629 \u0627\u0644\u062A\u062D\u0643\u0645.")), tab === 'gameplay' && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-4 classic-card p-6"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "flex items-center gap-2 font-bold text-gray-700"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: appConfig.enableTimer,
+    onChange: e => setAppConfig(p => ({
+      ...p,
+      enableTimer: e.target.checked
+    })),
+    className: "w-5 h-5"
+  }), "\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u0645\u0624\u0642\u062A"), /*#__PURE__*/React.createElement("label", {
+    className: "flex items-center gap-2 font-bold text-gray-700"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: appConfig.enableTTS,
+    onChange: e => setAppConfig(p => ({
+      ...p,
+      enableTTS: e.target.checked
+    })),
+    className: "w-5 h-5"
+  }), "\u0642\u0631\u0627\u0621\u0629 \u0627\u0644\u0633\u0624\u0627\u0644 (TTS)")), tab === 'sections' && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-4"
+  }, /*#__PURE__*/React.createElement("form", {
+    onSubmit: saveSection,
+    className: "p-4 bg-white rounded border border-gray-300 flex gap-2"
+  }, /*#__PURE__*/React.createElement("input", {
+    value: sectionForm.title,
+    onChange: e => setSectionForm({
+      ...sectionForm,
+      title: e.target.value
+    }),
+    placeholder: "\u0627\u0633\u0645 \u0627\u0644\u0642\u0633\u0645",
+    className: "flex-1 p-2 border rounded"
+  }), /*#__PURE__*/React.createElement("input", {
+    type: "color",
+    value: sectionForm.color,
+    onChange: e => setSectionForm({
+      ...sectionForm,
+      color: e.target.value
+    }),
+    className: "h-10 w-10 p-0 border-0 cursor-pointer"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "btn-classic px-6 rounded font-bold"
+  }, "\u062D\u0641\u0638")), data.sections.map(s => /*#__PURE__*/React.createElement("div", {
+    key: s.id,
+    className: "p-3 bg-white border rounded flex justify-between items-center"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "w-4 h-4 rounded-full",
+    style: {
+      backgroundColor: s.color
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "font-bold"
+  }, s.title)), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setEditingId(s.id);
+      setSectionForm({
+        title: s.title,
+        color: s.color
+      });
+    },
+    className: "text-blue-600"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "Edit3"
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      if (confirm('حذف؟')) setData(d => ({
+        ...d,
+        sections: d.sections.filter(x => x.id !== s.id)
+      }));
+    },
+    className: "text-red-600"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "Trash2"
+  })))))), tab === 'questions' && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-4"
+  }, /*#__PURE__*/React.createElement("form", {
+    onSubmit: saveQuestion,
+    className: "p-4 bg-white rounded border border-gray-300 space-y-3"
+  }, /*#__PURE__*/React.createElement("select", {
+    value: questionForm.sectionId,
+    onChange: e => setQuestionForm({
+      ...questionForm,
+      sectionId: e.target.value
+    }),
+    className: "w-full p-2 border rounded"
+  }, /*#__PURE__*/React.createElement("option", {
+    value: ""
+  }, "\u0627\u062E\u062A\u0631 \u0627\u0644\u0642\u0633\u0645..."), data.sections.map(s => /*#__PURE__*/React.createElement("option", {
+    key: s.id,
+    value: s.id
+  }, s.title))), /*#__PURE__*/React.createElement("textarea", {
+    value: questionForm.text,
+    onChange: e => setQuestionForm({
+      ...questionForm,
+      text: e.target.value
+    }),
+    placeholder: "\u0646\u0635 \u0627\u0644\u0633\u0624\u0627\u0644",
+    rows: "2",
+    className: "w-full p-2 border rounded"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-4"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "radio",
+    name: "qt",
+    checked: questionForm.type === 'choice',
+    onChange: () => setQuestionForm({
+      ...questionForm,
+      type: 'choice'
+    })
+  }), " \u062E\u064A\u0627\u0631\u0627\u062A"), /*#__PURE__*/React.createElement("label", {
+    className: "flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "radio",
+    name: "qt",
+    checked: questionForm.type === 'boolean',
+    onChange: () => setQuestionForm({
+      ...questionForm,
+      type: 'boolean'
+    })
+  }), " \u0635\u062D/\u062E\u0637\u0623")), questionForm.type === 'choice' && /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2"
+  }, ['op1', 'op2', 'op3', 'op4'].map(k => /*#__PURE__*/React.createElement("input", {
+    key: k,
+    value: questionForm[k],
+    onChange: e => setQuestionForm({
+      ...questionForm,
+      [k]: e.target.value
+    }),
+    placeholder: `الخيار ${k.replace('op', '')}`,
+    className: "p-2 border rounded"
+  }))), /*#__PURE__*/React.createElement("select", {
+    value: questionForm.answer,
+    onChange: e => setQuestionForm({
+      ...questionForm,
+      answer: e.target.value
+    }),
+    className: "w-full p-2 border rounded font-bold bg-green-50 text-green-700"
+  }, /*#__PURE__*/React.createElement("option", {
+    value: ""
+  }, "\u0627\u0644\u0625\u062C\u0627\u0628\u0629 \u0627\u0644\u0635\u062D\u064A\u062D\u0629"), questionForm.type === 'boolean' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("option", {
+    value: "\u0635\u062D"
+  }, "\u0635\u062D"), /*#__PURE__*/React.createElement("option", {
+    value: "\u062E\u0637\u0623"
+  }, "\u062E\u0637\u0623")) : ['op1', 'op2', 'op3', 'op4'].map(k => questionForm[k] && /*#__PURE__*/React.createElement("option", {
+    key: k,
+    value: questionForm[k]
+  }, questionForm[k]))), /*#__PURE__*/React.createElement("button", {
+    className: "btn-classic w-full py-2 rounded font-bold"
+  }, "\u062D\u0641\u0638 \u0627\u0644\u0633\u0624\u0627\u0644")), /*#__PURE__*/React.createElement("div", {
+    className: "max-h-60 overflow-y-auto space-y-2"
+  }, data.questions.map(q => /*#__PURE__*/React.createElement("div", {
+    key: q.id,
+    className: "p-2 border rounded bg-white flex justify-between items-center text-sm"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "truncate flex-1"
+  }, q.text), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setEditingId(q.id);
+      setQuestionForm({
+        ...q,
+        op1: q.options[0],
+        op2: q.options[1],
+        op3: q.options[2],
+        op4: q.options[3]
+      });
+    },
+    className: "text-blue-500"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "Edit3"
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      if (confirm('حذف السؤال؟')) {
+        if (window.api && window.api.deleteQuestion) {
+          window.api.deleteQuestion(q.id);
+        } else {
+          setData(d => ({
+            ...d,
+            questions: d.questions.filter(x => x.id !== q.id)
+          }));
+        }
+      }
+    },
+    className: "text-red-500"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "Trash2"
+  }))))))), tab === 'prizes' && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-4"
+  }, /*#__PURE__*/React.createElement("form", {
+    onSubmit: savePrize,
+    className: "p-4 bg-white rounded border border-gray-300 flex gap-2 items-center"
+  }, /*#__PURE__*/React.createElement("input", {
+    value: prizeForm.name,
+    onChange: e => setPrizeForm({
+      ...prizeForm,
+      name: e.target.value
+    }),
+    placeholder: "\u0627\u0633\u0645 \u0627\u0644\u062C\u0627\u0626\u0632\u0629",
+    className: "flex-1 p-2 border rounded"
+  }), /*#__PURE__*/React.createElement("input", {
+    type: "file",
+    ref: prizeFileInputRef,
+    className: "text-sm w-40"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "btn-classic px-4 py-2 rounded font-bold"
+  }, "\u0625\u0636\u0627\u0641\u0629")), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2"
+  }, data.prizes.map(p => /*#__PURE__*/React.createElement("div", {
+    key: p.id,
+    className: "p-2 border rounded bg-white flex items-center justify-between"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: p.image,
+    className: "w-8 h-8 object-contain"
+  }), /*#__PURE__*/React.createElement("span", null, p.name)), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setData(d => ({
+      ...d,
+      prizes: d.prizes.filter(x => x.id !== p.id)
+    })),
+    className: "text-red-500"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "Trash2"
+  })))))), tab === 'home_images' && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "classic-card p-4"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "block font-bold mb-2"
+  }, "\u062A\u063A\u064A\u064A\u0631 \u062D\u062C\u0645 \u0627\u0644\u0634\u0639\u0627\u0631\u0627\u062A"), /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    min: "0.5",
+    max: "1.5",
+    step: "0.1",
+    value: appConfig.logoScale || 1,
+    onChange: e => setAppConfig(c => ({
+      ...c,
+      logoScale: parseFloat(e.target.value)
+    })),
+    className: "w-full accent-classic-gold"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "text-center text-sm font-bold text-gray-500 mt-1"
+  }, Math.round((appConfig.logoScale || 1) * 100), "%")), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-4"
+  }, ['topImage', 'bottomImage', 'rightImage', 'leftImage'].map(k => /*#__PURE__*/React.createElement("div", {
+    key: k,
+    className: "classic-card p-4"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "block font-bold mb-2 text-sm"
+  }, k.replace('Image', '')), /*#__PURE__*/React.createElement("input", {
+    type: "file",
+    onChange: e => handleConfigImageUpload(k, e),
+    className: "text-sm w-full"
+  }), appConfig.layoutImages?.[k] && /*#__PURE__*/React.createElement("button", {
+    onClick: () => removeConfigImage(k),
+    className: "text-red-600 text-xs mt-2 font-bold"
+  }, "\u062D\u0630\u0641 \u0627\u0644\u0635\u0648\u0631\u0629"))))), tab === 'intro' && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-4 classic-card p-6"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "flex items-center gap-2 font-bold"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: appConfig.enableIntro,
+    onChange: e => setAppConfig(c => ({
+      ...c,
+      enableIntro: e.target.checked
+    }))
+  }), " \u062A\u0641\u0639\u064A\u0644 \u0634\u0627\u0634\u0629 \u0627\u0644\u0628\u062F\u0627\u064A\u0629"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "block text-sm font-bold mb-1"
+  }, "\u0627\u0633\u0645 \u0627\u0644\u0631\u0627\u0639\u064A"), /*#__PURE__*/React.createElement("input", {
+    value: appConfig.sponsorName,
+    onChange: e => setAppConfig(c => ({
+      ...c,
+      sponsorName: e.target.value
+    })),
+    className: "w-full p-2 border rounded"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "block text-sm font-bold mb-1"
+  }, "\u0634\u0639\u0627\u0631 \u0627\u0644\u0631\u0627\u0639\u064A"), /*#__PURE__*/React.createElement("input", {
+    type: "file",
+    onChange: e => handleConfigImageUpload('sponsorLogo', e),
+    className: "text-sm"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pt-2 border-t border-gray-200"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "block text-sm font-bold mb-2 flex justify-between"
+  }, /*#__PURE__*/React.createElement("span", null, "\u062D\u062C\u0645 \u0634\u0639\u0627\u0631 \u0627\u0644\u0631\u0627\u0639\u064A"), /*#__PURE__*/React.createElement("span", {
+    className: "text-gray-500 text-xs"
+  }, Math.round((appConfig.sponsorLogoScale || 1) * 100), "%")), /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    min: "0.5",
+    max: "3.0",
+    step: "0.1",
+    value: appConfig.sponsorLogoScale || 1,
+    onChange: e => setAppConfig(c => ({
+      ...c,
+      sponsorLogoScale: parseFloat(e.target.value)
+    })),
+    className: "w-full accent-classic-gold"
+  }))), tab === 'texts' && /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-4"
+  }, Object.entries(appConfig.labels).map(([k, v]) => /*#__PURE__*/React.createElement("div", {
+    key: k,
+    className: "flex flex-col"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "text-xs font-bold text-gray-500 mb-1"
+  }, k), /*#__PURE__*/React.createElement("input", {
+    value: v,
+    onChange: e => updateLabel(k, e.target.value),
+    className: "p-2 border rounded text-sm"
+  })))), tab === 'data' && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-4 text-center"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: handleExport,
+    className: "btn-outline w-full p-3 rounded font-bold"
+  }, "\u062A\u0635\u062F\u064A\u0631 \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A (JSON)"), /*#__PURE__*/React.createElement("label", {
+    className: "btn-outline w-full p-3 rounded font-bold block cursor-pointer"
+  }, "\u0627\u0633\u062A\u064A\u0631\u0627\u062F \u0628\u064A\u0627\u0646\u0627\u062A", /*#__PURE__*/React.createElement("input", {
+    type: "file",
+    onChange: handleImport,
+    className: "hidden"
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: onReset,
+    className: "w-full p-3 bg-red-100 text-red-700 border border-red-300 rounded font-bold"
+  }, "\u0625\u0639\u0627\u062F\u0629 \u062A\u0639\u064A\u064A\u0646 \u0627\u0644\u0645\u0635\u0646\u0639")))));
+};
+const ConfirmModal = ({
+  message,
+  onConfirm,
+  onCancel,
+  labels
+}) => /*#__PURE__*/React.createElement("div", {
+  className: "fixed inset-0 z-[150] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+}, /*#__PURE__*/React.createElement("div", {
+  className: "bg-white rounded-lg p-8 max-w-sm w-full shadow-2xl border-t-8 border-classic-gold"
+}, /*#__PURE__*/React.createElement("div", {
+  className: "text-center mb-6"
+}, /*#__PURE__*/React.createElement(Icon, {
+  name: "AlertTriangle",
+  size: "40",
+  className: "text-classic-gold mb-3"
+}), /*#__PURE__*/React.createElement("h3", {
+  className: "text-xl font-bold text-gray-800"
+}, labels.alertTitle), /*#__PURE__*/React.createElement("p", {
+  className: "text-gray-600 font-bold"
+}, message)), /*#__PURE__*/React.createElement("div", {
+  className: "flex gap-3"
+}, /*#__PURE__*/React.createElement("button", {
+  onClick: onCancel,
+  className: "flex-1 py-2 rounded bg-gray-200 hover:bg-gray-300 font-bold"
+}, labels.confirmNo), /*#__PURE__*/React.createElement("button", {
+  onClick: onConfirm,
+  className: "flex-1 py-2 rounded bg-classic-dark text-white hover:bg-classic-green font-bold"
+}, labels.confirmYes))));
+
+// --- Main Application ---
+const App = () => {
+  const [data, setData] = useState(INITIAL_DATA);
+  const [appConfig, setAppConfig] = useState({
+    bgMode: 'pattern',
+    activePatternId: 'geo1',
+    customBgImage: null,
+    baseTransparent: true,
+    presentationMode: false,
+    labels: DEFAULT_LABELS,
+    enableIntro: true,
+    sponsorName: '',
+    layoutImages: {},
+    enableTimer: true,
+    enableTTS: false,
+    adminPin: '1234',
+    logoScale: 1,
+    sponsorLogoScale: 1
+  });
+  const [introShown, setIntroShown] = useState(false);
+  const [view, setView] = useState('home');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [score, setScore] = useState(0);
+  const [timer, setTimer] = useState(30);
+
+  // UI State
+  const [activeSection, setActiveSection] = useState(null);
+  const [activeQuestion, setActiveQuestion] = useState(null);
+  const [selectedPrize, setSelectedPrize] = useState(null);
+  const [feedback, setFeedback] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState({
+    show: false,
+    message: '',
+    onConfirm: null
+  });
+  const [scale, setScale] = useState(1);
+
+  // AI State
+  const [aiExplanation, setAiExplanation] = useState(null);
+  const [isExplaining, setIsExplaining] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const apiKey = "";
+
+  // Initialize
+  useEffect(() => {
+    if (appConfig.enableIntro && !introShown) setView('intro');
+  }, [appConfig.enableIntro]);
+  useEffect(() => {
+    const d = localStorage.getItem('qDataClassic3'),
+      c = localStorage.getItem('qConfigClassic3');
+    if (d) setData(JSON.parse(d));
+    if (c) setAppConfig(JSON.parse(c));
+  }, []);
+
+  // --- FIREBASE INTEGRATION ---
+  useEffect(() => {
+    // Initial Load
+    if (window.api && window.api.getQuestions) {
+      window.api.getQuestions().then(dbQuestions => {
+        console.log("Loaded questions from Firestore:", dbQuestions);
+        if (dbQuestions && dbQuestions.length > 0) {
+          setData(prev => {
+            // Merge logic: You might want to replace entirely or merge
+            // Here we replace the questions array with the one from DB
+            // But we need to make sure we don't lose 'isAnswered' status if it was persisted locally.
+            // A simple approach is to trust Firestore as the Single Source of Truth for *questions content*,
+            // but maybe keep local state for *isAnswered*?
+
+            // For now, let's just load them. If you need sync 'isAnswered' state across devices, 
+            // that needs writing back to Firestore.
+            // Assuming we just want to LOAD questions:
+            return {
+              ...prev,
+              questions: dbQuestions
+            };
+          });
+        }
+      }).catch(err => console.error("Failed to load questions:", err));
+
+      // Real-time Listeners
+      window.api.onQuestionsUpdate(updatedQuestions => {
+        console.log("Realtime update:", updatedQuestions);
+        setData(prev => ({
+          ...prev,
+          questions: updatedQuestions
+        }));
+      });
+    } else {
+      console.error("Window API is not defined. Preload script might have failed.");
+    }
+  }, []);
+  useEffect(() => {
+    localStorage.setItem('qDataClassic3', JSON.stringify(data));
+  }, [data]);
+  useEffect(() => {
+    localStorage.setItem('qConfigClassic3', JSON.stringify(appConfig));
+  }, [appConfig]);
+
+  // Resize & Fullscreen
+  useEffect(() => {
+    if (!appConfig.presentationMode) {
+      setScale(1);
+      return;
+    }
+    const rs = () => setScale(Math.min(window.innerWidth / 1920, window.innerHeight / 1080));
+    window.addEventListener('resize', rs);
+    rs();
+    return () => window.removeEventListener('resize', rs);
+  }, [appConfig.presentationMode]);
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(console.log);else document.exitFullscreen().then(() => setIsFullscreen(false)).catch(console.log);
+  };
+  useEffect(() => {
+    const h = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', h);
+    return () => document.removeEventListener('fullscreenchange', h);
+  }, []);
+
+  // Timer
+  useEffect(() => {
+    let interval;
+    if (view === 'question' && !feedback && appConfig.enableTimer && timer > 0) {
+      interval = setInterval(() => setTimer(t => t - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timer, view, feedback, appConfig.enableTimer]);
+
+  // TTS
+  const speak = text => {
+    if (!appConfig.enableTTS) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ar-SA';
+    window.speechSynthesis.speak(u);
+  };
+
+  // Interactions
+  const triggerConfetti = (isWin = false) => {
+    const confetti = window.confetti;
+    if (typeof confetti !== 'function') return;
+    if (isWin) {
+      const end = Date.now() + 3000;
+      const colors = ['#d4af37', '#ffffff', '#1b4332'];
+      (function frame() {
+        confetti({
+          particleCount: 6,
+          angle: 60,
+          spread: 55,
+          origin: {
+            x: 0
+          },
+          colors
+        });
+        confetti({
+          particleCount: 6,
+          angle: 120,
+          spread: 55,
+          origin: {
+            x: 1
+          },
+          colors
+        });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+    } else confetti({
+      particleCount: 100,
+      spread: 80,
+      origin: {
+        y: 0.7
+      },
+      colors: ['#1b4332', '#d4af37']
+    });
+  };
+  const handleReset = () => setConfirmDialog({
+    show: true,
+    message: appConfig.labels.resetDesc,
+    onConfirm: () => {
+      setData(prev => ({
+        ...prev,
+        questions: prev.questions.map(q => ({
+          ...q,
+          isAnswered: false
+        })),
+        prizes: prev.prizes.map(p => ({
+          ...p,
+          isTaken: false
+        }))
+      }));
+      setConfirmDialog({
+        show: false,
+        message: '',
+        onConfirm: null
+      });
+    }
+  });
+  const handleAnswer = opt => {
+    setData(prev => ({
+      ...prev,
+      questions: prev.questions.map(q => q.id === activeQuestion.id ? {
+        ...q,
+        isAnswered: true
+      } : q)
+    }));
+    if (opt === activeQuestion.answer) {
+      setFeedback('correct');
+      triggerConfetti(false);
+    } else {
+      setFeedback('wrong');
+    }
+  };
+  const selectPrize = id => {
+    const p = data.prizes.find(pz => pz.id === id);
+    if (!p.isTaken) {
+      setSelectedPrize(p);
+      setData(prev => ({
+        ...prev,
+        prizes: prev.prizes.map(pz => pz.id === id ? {
+          ...pz,
+          isTaken: true
+        } : pz)
+      }));
+      setView('prizeReveal');
+      triggerConfetti(true);
+    }
+  };
+
+  // Settings Lock Handlers
+  const handleSettingsClick = () => {
+    setShowPinModal(true);
+  };
+  const handlePinSuccess = () => {
+    setShowSettings(true);
+  };
+
+  // AI Logic
+  const generateAIQuestions = async (sectionTitle, sectionId) => {
+    setIsGenerating(true);
+    try {
+      const prompt = `Generate 5 multiple choice questions in Arabic about "${sectionTitle}". JSON format: [{"text":"?","options":["a","b","c","d"],"answer":"a","type":"choice"}]`;
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }]
+        })
+      });
+      const result = await response.json();
+      let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) throw new Error("No data");
+      let cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      const newQ = JSON.parse(cleanedText).map((q, i) => ({
+        ...q,
+        id: Date.now() + i,
+        sectionId,
+        isAnswered: false
+      }));
+      setData(p => ({
+        ...p,
+        questions: [...p.questions, ...newQ]
+      }));
+      alert("تمت الإضافة بنجاح!");
+    } catch (e) {
+      console.error(e);
+      alert("حدث خطأ أثناء التوليد.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+  const explainAnswerWithAI = async (q, a) => {
+    setIsExplaining(true);
+    setAiExplanation(null);
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `اشرح لماذا "${a}" هي إجابة "${q}" باختصار.`
+            }]
+          }]
+        })
+      });
+      const json = await res.json();
+      setAiExplanation(json.candidates?.[0]?.content?.parts?.[0]?.text);
+    } catch {
+      setAiExplanation("عذراً، الخدمة غير متاحة.");
+    } finally {
+      setIsExplaining(false);
+    }
+  };
+
+  // --- Views Content ---
+  const IntroView = () => /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col items-center justify-center h-full w-full animate-fade-in relative z-10 p-12 text-center"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "classic-card p-12 bg-white max-w-4xl w-full flex flex-col items-center shadow-2xl"
+  }, appConfig.layoutImages?.sponsorLogo && /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: `${8 * (appConfig.sponsorLogoScale || 1)}rem`
+    },
+    className: "mb-8 flex items-end justify-center transition-all duration-300"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: appConfig.layoutImages.sponsorLogo,
+    className: "h-full w-auto object-contain"
+  })), /*#__PURE__*/React.createElement("h1", {
+    className: "text-7xl font-bold text-classic-dark mb-4 font-amiri border-b-2 border-classic-gold pb-4 px-8"
+  }, appConfig.labels.appTitle), /*#__PURE__*/React.createElement("p", {
+    className: "text-2xl text-gray-600 font-bold mb-10"
+  }, appConfig.labels.appSubtitle), appConfig.sponsorName && /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3 bg-gray-50 px-6 py-2 rounded border border-gray-300 mb-10 shadow-sm"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-gray-500 font-bold"
+  }, appConfig.labels.sponsoredBy), /*#__PURE__*/React.createElement("span", {
+    className: "text-classic-dark font-bold"
+  }, appConfig.sponsorName)), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setIntroShown(true);
+      setView('home');
+    },
+    className: "btn-classic text-2xl font-bold py-4 px-16 rounded-full shadow-lg"
+  }, appConfig.labels.startQuiz)));
+  const content = /*#__PURE__*/React.createElement("div", {
+    className: "h-full w-full relative flex flex-col font-cairo select-none",
+    dir: "rtl"
+  }, /*#__PURE__*/React.createElement(OrientationGuard, {
+    labels: appConfig.labels
+  }), /*#__PURE__*/React.createElement("header", {
+    className: "absolute top-0 w-full p-4 z-30 flex justify-between items-center pointer-events-none bg-white/90 border-b border-gray-200 shadow-sm"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pointer-events-auto flex gap-4"
+  }, view !== 'intro' && /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 px-2"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "Moon",
+    className: "text-classic-dark"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "font-bold text-gray-700"
+  }, appConfig.labels.appTitle))), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2 pointer-events-auto"
+  }, view !== 'home' && view !== 'intro' && /*#__PURE__*/React.createElement("button", {
+    onClick: () => setView('home'),
+    className: "btn-outline px-4 py-1 rounded font-bold text-sm"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "Grid"
+  }), " ", appConfig.labels.mainMenu), /*#__PURE__*/React.createElement("button", {
+    onClick: toggleFullscreen,
+    className: "btn-outline w-9 h-9 rounded flex items-center justify-center",
+    title: "\u0645\u0644\u0621 \u0627\u0644\u0634\u0627\u0634\u0629"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: isFullscreen ? 'Minimize' : 'Maximize'
+  })), /*#__PURE__*/React.createElement("button", {
+    onClick: handleSettingsClick,
+    className: "btn-outline w-9 h-9 rounded flex items-center justify-center"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "Settings"
+  })))), /*#__PURE__*/React.createElement("main", {
+    className: "flex-1 relative z-10 flex items-center justify-center overflow-hidden pt-16"
+  }, view === 'intro' && /*#__PURE__*/React.createElement(IntroView, null), view === 'home' && /*#__PURE__*/React.createElement("div", {
+    className: "w-full h-full flex flex-col relative animate-fade-in"
+  }, appConfig.layoutImages?.topImage && /*#__PURE__*/React.createElement("img", {
+    src: appConfig.layoutImages.topImage,
+    className: "absolute top-0 w-full h-24 object-contain object-top opacity-100 pointer-events-none z-0"
+  }), appConfig.layoutImages?.bottomImage && /*#__PURE__*/React.createElement("img", {
+    src: appConfig.layoutImages.bottomImage,
+    className: "absolute bottom-0 w-full h-24 object-contain object-bottom opacity-100 pointer-events-none z-0"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex w-full h-full items-center justify-center relative z-10 p-8 gap-8"
+  }, appConfig.layoutImages?.rightImage && /*#__PURE__*/React.createElement("img", {
+    src: appConfig.layoutImages.rightImage,
+    className: "h-2/3 w-32 object-contain opacity-100 pointer-events-none hidden lg:block z-20",
+    style: {
+      transform: `scale(${appConfig.logoScale || 1})`
+    }
+  }), appConfig.layoutImages?.leftImage && /*#__PURE__*/React.createElement("img", {
+    src: appConfig.layoutImages.leftImage,
+    className: "h-2/3 w-32 object-contain opacity-100 pointer-events-none hidden lg:block z-20",
+    style: {
+      transform: `scale(${appConfig.logoScale || 1})`
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl"
+  }, data.sections.map((s, i) => /*#__PURE__*/React.createElement("button", {
+    key: s.id,
+    onClick: () => {
+      setActiveSection(s);
+      setView('section');
+    },
+    className: "classic-card group h-80 p-6 flex flex-col justify-between text-right hover:border-classic-gold transition-all duration-200 hover:-translate-y-1"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-md text-white mb-4 border-4 border-white",
+    style: {
+      background: s.color
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: s.icon
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", {
+    className: "text-3xl font-bold text-gray-800 mb-2 font-amiri"
+  }, s.title), /*#__PURE__*/React.createElement("div", {
+    className: "inline-flex items-center gap-2 bg-gray-100 px-3 py-1 rounded border border-gray-200"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "w-2 h-2 rounded-full bg-classic-dark"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "text-gray-600 font-bold text-sm"
+  }, data.questions.filter(q => q.sectionId === s.id && !q.isAnswered).length, " ", appConfig.labels.questionsRemaining))), /*#__PURE__*/React.createElement("div", {
+    className: "w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-classic-dark group-hover:text-white transition-colors self-end"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "ArrowRight",
+    size: "16"
+  }))))))), view === 'section' && activeSection && /*#__PURE__*/React.createElement("div", {
+    className: "w-full max-w-7xl animate-in zoom-in-95 p-8 h-full flex flex-col"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-between items-center mb-8 bg-white p-4 rounded-lg border-2 border-gray-200 shadow-sm"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-4"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setView('home'),
+    className: "btn-outline w-12 h-12 rounded-full flex items-center justify-center text-xl hover:bg-slate-100 transition shadow-sm",
+    title: appConfig.labels.backToSections
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "ArrowRight"
+  })), /*#__PURE__*/React.createElement("h2", {
+    className: "text-4xl font-bold text-classic-dark font-amiri"
+  }, activeSection.title)), /*#__PURE__*/React.createElement("button", {
+    onClick: () => generateAIQuestions(activeSection.title, activeSection.id),
+    disabled: isGenerating,
+    className: "btn-outline px-6 py-2 rounded flex items-center gap-2 font-bold"
+  }, isGenerating ? /*#__PURE__*/React.createElement(Icon, {
+    name: "Loader2"
+  }) : /*#__PURE__*/React.createElement(Icon, {
+    name: "Sparkles",
+    className: "text-purple-600"
+  }), /*#__PURE__*/React.createElement("span", null, appConfig.labels.generateAI))), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-6 flex-1 content-start overflow-y-auto custom-scrollbar p-2"
+  }, data.questions.filter(q => q.sectionId === activeSection.id).map((q, idx) => /*#__PURE__*/React.createElement("button", {
+    key: q.id,
+    disabled: q.isAnswered,
+    onClick: () => {
+      setActiveQuestion(q);
+      setTimer(30);
+      setFeedback(null);
+      setView('question');
+      speak(q.text);
+    },
+    className: `aspect-square rounded-xl text-3xl font-bold flex items-center justify-center transition-all duration-200 shadow-sm border-2 ${q.isAnswered ? 'bg-gray-200 border-gray-300 text-gray-400' : 'bg-white border-gray-300 text-classic-dark hover:border-classic-gold hover:shadow-md'}`
+  }, q.isAnswered ? /*#__PURE__*/React.createElement(Icon, {
+    name: "CheckCircle"
+  }) : /*#__PURE__*/React.createElement("span", {
+    className: "font-amiri"
+  }, idx + 1))))), view === 'question' && activeQuestion && /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-white w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl flex flex-col border-4 border-classic-gold h-[85vh]"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "p-10 bg-classic-dark text-white text-center relative border-b-4 border-classic-gold flex-[0.4] flex flex-col items-center justify-center"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "text-4xl font-bold font-amiri leading-relaxed max-w-4xl"
+  }, activeQuestion.text), appConfig.enableTimer && !feedback && /*#__PURE__*/React.createElement("div", {
+    className: `absolute top-6 right-6 text-2xl font-bold flex items-center gap-2 px-4 py-1 rounded bg-white/10 border ${timer < 10 ? 'text-red-300 border-red-300 animate-pulse' : 'text-classic-gold border-classic-gold'}`
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "Clock"
+  }), " ", timer), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setView('section'),
+    className: "absolute top-6 left-6 w-10 h-10 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border border-white/30"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "X",
+    size: "24"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "p-8 bg-gray-50 flex-1 flex flex-col justify-center relative"
+  }, !feedback ? /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 md:grid-cols-2 gap-4 h-full"
+  }, activeQuestion.options.map((op, i) => /*#__PURE__*/React.createElement("button", {
+    key: i,
+    onClick: () => handleAnswer(op),
+    className: "group p-6 text-2xl font-bold rounded-xl border-2 border-gray-300 bg-white text-gray-700 hover:border-classic-dark hover:bg-emerald-50 hover:text-classic-dark transition-all shadow-sm flex items-center"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "w-10 h-10 rounded bg-gray-100 border border-gray-300 flex items-center justify-center ml-4 text-sm font-bold group-hover:bg-classic-dark group-hover:text-white"
+  }, ['أ', 'ب', 'ج', 'د'][i]), op))) : /*#__PURE__*/React.createElement("div", {
+    className: "text-center animate-fade-in flex flex-col items-center justify-center h-full"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: `w-24 h-24 rounded-full flex items-center justify-center text-5xl mb-4 border-4 shadow-lg ${feedback === 'correct' ? 'bg-emerald-100 text-emerald-700 border-emerald-500' : 'bg-red-100 text-red-700 border-red-500'}`
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: feedback === 'correct' ? 'CheckCircle' : 'XCircle'
+  })), /*#__PURE__*/React.createElement("h2", {
+    className: "text-4xl font-bold mb-2 font-amiri text-gray-800"
+  }, feedback === 'correct' ? appConfig.labels.correctTitle : appConfig.labels.wrongTitle), /*#__PURE__*/React.createElement("p", {
+    className: "text-xl text-gray-600 mb-8 font-bold"
+  }, feedback === 'correct' ? appConfig.labels.correctMessage : appConfig.labels.wrongMessage), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-4"
+  }, feedback === 'correct' ? /*#__PURE__*/React.createElement("button", {
+    onClick: () => setView('prizes'),
+    className: "btn-gold px-12 py-4 rounded font-bold text-xl shadow-lg flex items-center gap-3"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "Gift"
+  }), " ", appConfig.labels.goToPrizes) : /*#__PURE__*/React.createElement("button", {
+    onClick: () => setView('section'),
+    className: "btn-outline px-12 py-4 rounded font-bold text-xl"
+  }, appConfig.labels.backToQuestions)), /*#__PURE__*/React.createElement("button", {
+    onClick: () => explainAnswerWithAI(activeQuestion.text, activeQuestion.answer),
+    disabled: isExplaining,
+    className: "mt-8 text-classic-dark hover:underline font-bold flex items-center gap-2 mx-auto"
+  }, isExplaining ? /*#__PURE__*/React.createElement(Icon, {
+    name: "Loader2"
+  }) : /*#__PURE__*/React.createElement(Icon, {
+    name: "Info"
+  }), " ", feedback === 'correct' ? appConfig.labels.explainAI : appConfig.labels.knowAnswerAI), aiExplanation && /*#__PURE__*/React.createElement("div", {
+    className: "mt-4 p-4 bg-white border border-gray-300 rounded text-lg text-gray-700 shadow-sm max-w-2xl"
+  }, aiExplanation))))), view === 'prizes' && /*#__PURE__*/React.createElement("div", {
+    className: "w-full h-full flex flex-col items-center justify-center p-8 animate-fade-in"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "text-6xl font-bold mb-12 text-classic-dark font-amiri border-b-4 border-classic-gold px-12 pb-2"
+  }, appConfig.labels.choosePrize), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-4 gap-8 w-full max-w-6xl"
+  }, data.prizes.map((p, idx) => /*#__PURE__*/React.createElement("button", {
+    key: p.id,
+    disabled: p.isTaken,
+    onClick: () => selectPrize(p.id),
+    className: `classic-card h-72 flex flex-col items-center justify-center transition-all duration-300 transform ${p.isTaken ? 'bg-gray-200 grayscale opacity-60 cursor-not-allowed' : 'hover:-translate-y-2 hover:shadow-xl hover:border-classic-gold'}`
+  }, p.isTaken ? /*#__PURE__*/React.createElement(Icon, {
+    name: "CheckCircle",
+    size: "64",
+    className: "text-gray-400"
+  }) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "text-8xl text-classic-gold animate-bounce",
+    style: {
+      animationDuration: '3s'
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "Gift"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "mt-6 text-classic-dark font-bold text-lg opacity-0 group-hover:opacity-100 transition"
+  }, appConfig.labels.clickToOpen)))))), view === 'prizeReveal' && selectedPrize && /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-4 animate-fade-in"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "classic-card p-16 text-center bg-white relative max-w-3xl w-full"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "relative mb-8"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: selectedPrize.image,
+    className: "w-64 h-64 mx-auto object-contain drop-shadow-xl animate-float"
+  })), /*#__PURE__*/React.createElement("h2", {
+    className: "text-6xl font-bold text-classic-gold mb-4 font-amiri"
+  }, appConfig.labels.congrats), /*#__PURE__*/React.createElement("p", {
+    className: "text-3xl text-gray-700 mb-8 font-bold"
+  }, appConfig.labels.youWon), /*#__PURE__*/React.createElement("div", {
+    className: "bg-classic-dark text-white px-12 py-4 rounded text-4xl font-bold mb-10 shadow-lg border-2 border-classic-gold font-amiri"
+  }, selectedPrize.name), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setView('section'),
+    className: "btn-gold px-16 py-4 rounded font-bold text-2xl shadow-lg"
+  }, appConfig.labels.continue)))), showPinModal && /*#__PURE__*/React.createElement(PinModal, {
+    isOpen: showPinModal,
+    onClose: () => setShowPinModal(false),
+    onSuccess: handlePinSuccess,
+    labels: appConfig.labels,
+    currentPin: appConfig.adminPin
+  }), showSettings && /*#__PURE__*/React.createElement(SettingsModal, {
+    appConfig: appConfig,
+    setAppConfig: setAppConfig,
+    data: data,
+    setData: setData,
+    onClose: () => setShowSettings(false),
+    onReset: handleReset,
+    apiKey: apiKey
+  }), confirmDialog.show && /*#__PURE__*/React.createElement(ConfirmModal, {
+    message: confirmDialog.message,
+    onConfirm: confirmDialog.onConfirm,
+    onCancel: () => setConfirmDialog({
+      show: false,
+      message: '',
+      onConfirm: null
+    }),
+    labels: appConfig.labels
+  }));
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ClassicBackground, {
+    config: appConfig
+  }), appConfig.presentationMode ? /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 flex items-center justify-center bg-black"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 1920,
+      height: 1080,
+      transform: `scale(${scale})`
+    },
+    className: "relative overflow-hidden bg-white shadow-2xl border-4 border-gray-800"
+  }, content)) : content);
+};
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(/*#__PURE__*/React.createElement(App, null));
