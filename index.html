@@ -658,7 +658,72 @@
             );
         };
 
+        // --- Update Modal ---
+        const UpdateModal = ({ status, progress, onDownload, onRestart, onClose, labels }) => {
+            if (!status) return null;
+
+            return (
+                <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg p-8 max-w-sm w-full shadow-2xl border-t-8 border-classic-gold animate-fade-in">
+                        <div className="text-center mb-6">
+                            <div className="w-16 h-16 mx-auto mb-4 bg-classic-bg rounded-full flex items-center justify-center border-2 border-classic-gold">
+                                {status === 'checking' && <Icon name="Loader2" size="32" className="text-classic-dark" />}
+                                {status === 'available' && <Icon name="Download" size="32" className="text-classic-dark" />}
+                                {status === 'no-update' && <Icon name="CheckCircle" size="32" className="text-green-600" />}
+                                {status === 'downloading' && <Icon name="Download" size="32" className="text-classic-dark animate-pulse" />}
+                                {status === 'ready' && <Icon name="Gift" size="32" className="text-classic-gold" />}
+                                {status === 'error' && <Icon name="AlertTriangle" size="32" className="text-red-500" />}
+                            </div>
+
+                            <h3 className="text-xl font-bold text-gray-800 mb-2">
+                                {status === 'checking' && "جاري البحث عن تحديثات..."}
+                                {status === 'available' && "يتوفر إصدار جديد!"}
+                                {status === 'no-update' && "الإصدار الحالي هو الأحدث."}
+                                {status === 'downloading' && "جاري التنزيل..."}
+                                {status === 'ready' && "التحديث جاهز للتثبيت!"}
+                                {status === 'error' && "حدث خطأ أثناء التحديث"}
+                            </h3>
+
+                            <p className="text-gray-600">
+                                {status === 'available' && "هل ترغب في تنزيل التحديث الآن؟"}
+                                {status === 'downloading' && <span className="text-2xl font-bold text-classic-gold">{Math.round(progress)}%</span>}
+                                {status === 'ready' && "يجب إعادة تشغيل التطبيق لتثبيت التحديث."}
+                                {status === 'error' && "تأكد من اتصالك بالإنترنت وحاول مرة أخرى."}
+                            </p>
+                        </div>
+
+                        {status === 'downloading' && (
+                            <div className="w-full bg-gray-200 rounded-full h-4 mb-6 overflows-hidden">
+                                <div className="bg-classic-gold h-4 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                            </div>
+                        )}
+
+                        <div className="flex gap-3">
+                            {status === 'available' && (
+                                <>
+                                    <button onClick={onClose} className="flex-1 py-2 rounded bg-gray-200 hover:bg-gray-300 font-bold">{labels.confirmNo}</button>
+                                    <button onClick={onDownload} className="flex-1 py-2 rounded bg-classic-dark text-white hover:bg-classic-green font-bold">{labels.confirmYes}</button>
+                                </>
+                            )}
+
+                            {status === 'ready' && (
+                                <>
+                                    <button onClick={onClose} className="flex-1 py-2 rounded bg-gray-200 hover:bg-gray-300 font-bold">لاحقاً</button>
+                                    <button onClick={onRestart} className="flex-1 py-2 rounded bg-classic-gold text-white hover:brightness-110 font-bold">إعادة التشغيل</button>
+                                </>
+                            )}
+
+                            {(status === 'no-update' || status === 'error') && (
+                                <button onClick={onClose} className="flex-1 py-2 rounded bg-classic-dark text-white hover:bg-classic-green font-bold">إغلاق</button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         const ConfirmModal = ({ message, onConfirm, onCancel, labels }) => (
+
             <div className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                 <div className="bg-white rounded-lg p-8 max-w-sm w-full shadow-2xl border-t-8 border-classic-gold">
                     <div className="text-center mb-6">
@@ -705,6 +770,29 @@
             const [isExplaining, setIsExplaining] = useState(false);
             const [isGenerating, setIsGenerating] = useState(false);
             const apiKey = "";
+
+            // Update State
+            const [updateStatus, setUpdateStatus] = useState(null);
+            const [downloadProgress, setDownloadProgress] = useState(0);
+
+            // Auto Updater Events
+            useEffect(() => {
+                if (window.api) {
+                    window.api.onUpdateMessage?.((args) => setUpdateStatus(args.status));
+                    window.api.onUpdateAvailable?.((info) => setUpdateStatus('available'));
+                    window.api.onUpdateNotAvailable?.((info) => setUpdateStatus('no-update'));
+                    window.api.onDownloadProgress?.((progress) => {
+                        setUpdateStatus('downloading');
+                        setDownloadProgress(progress);
+                    });
+                    window.api.onUpdateDownloaded?.((info) => setUpdateStatus('ready'));
+                    window.api.onUpdateError?.((err) => {
+                        console.error("Update error:", err);
+                        setUpdateStatus('error');
+                    });
+                }
+            }, []);
+
 
             // Initialize
             useEffect(() => { if (appConfig.enableIntro && !introShown) setView('intro'); }, [appConfig.enableIntro]);
@@ -1056,6 +1144,14 @@
                     {showPinModal && <PinModal isOpen={showPinModal} onClose={() => setShowPinModal(false)} onSuccess={handlePinSuccess} labels={appConfig.labels} currentPin={appConfig.adminPin} />}
                     {showSettings && <SettingsModal appConfig={appConfig} setAppConfig={setAppConfig} data={data} setData={setData} onClose={() => setShowSettings(false)} onReset={handleReset} apiKey={apiKey} />}
                     {confirmDialog.show && <ConfirmModal message={confirmDialog.message} onConfirm={confirmDialog.onConfirm} onCancel={() => setConfirmDialog({ show: false, message: '', onConfirm: null })} labels={appConfig.labels} />}
+                    {updateStatus && <UpdateModal
+                        status={updateStatus}
+                        progress={downloadProgress}
+                        onDownload={() => window.api?.downloadUpdate()}
+                        onRestart={() => window.api?.quitAndInstall()}
+                        onClose={() => setUpdateStatus(null)}
+                        labels={appConfig.labels}
+                    />}
                 </div>
             );
 
