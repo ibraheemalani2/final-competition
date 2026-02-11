@@ -4,47 +4,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>مسابقة المعرفة الإسلامية - النسخة الاحترافية</title>
+    <title>مسابقة المعرفة الإسلامية - النسخة المطورّة</title>
 
-    <!-- React & ReactDOM (Local) -->
-    <script src="./node_modules/react/umd/react.production.min.js"></script>
-    <script src="./node_modules/react-dom/umd/react-dom.production.min.js"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
-    <!-- Babel for JSX (Local) -->
-    <script src="./node_modules/@babel/standalone/babel.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Tailwind CSS (Compiled) -->
-    <link href="./assets/css/styles.css" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        classic: {
+                            bg: 'var(--theme-bg)',
+                            dark: 'var(--theme-primary)',
+                            green: 'var(--theme-primary-light)',
+                            gold: 'var(--theme-secondary)',
+                            text: '#1f2937',
+                            accent: '#b91c1c'
+                        }
+                    },
+                    boxShadow: {
+                        'classic': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        'classic-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        'gold': '0 0 0 2px var(--theme-secondary)',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 
-    <!-- FontAwesome Icons (Local) -->
-    <link rel="stylesheet" href="./node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Canvas Confetti (Local) -->
-    <script src="./node_modules/canvas-confetti/dist/confetti.browser.js"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
-    <!-- Local Fonts -->
-    <link rel="stylesheet" href="./node_modules/@fontsource/cairo/index.css">
-    <link rel="stylesheet" href="./node_modules/@fontsource/amiri/index.css">
+    <!-- Google Fonts (30 Fonts) -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;700&family=Almarai:wght@400;700&family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=Baloo+Bhaijaan+2:wght@400;700&family=Blaka&family=Cairo:wght@400;600;700;800&family=Cairo+Play:wght@400;700&family=Changa:wght@400;700&family=El+Messiri:wght@400;700&family=Gulzar&family=Harmattan:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;700&family=Katibeh&family=Kufam:wght@400;700&family=Lalezar&family=Lateef:wght@400;700&family=Lemonada:wght@400;700&family=Mada:wght@400;700&family=Marhey:wght@400;700&family=Mirza:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&family=Qahiri&family=Rakkas&family=Readex+Pro:wght@400;700&family=Reem+Kufi:wght@400;700&family=Rubik:wght@400;700&family=Scheherazade+New:wght@400;700&family=Tajawal:wght@400;700&family=Vibes&family=Zain:wght@400;700&display=swap"
+        rel="stylesheet">
 
     <style>
-        /* Fonts loaded locally */
+        :root {
+            --theme-primary: #1b4332;
+            --theme-primary-light: #2d6a4f;
+            --theme-secondary: #d4af37;
+            --theme-bg: #fdfbf7;
+            --theme-font: 'Cairo';
+        }
 
         body {
-            font-family: 'Cairo', sans-serif;
+            font-family: var(--theme-font), sans-serif;
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: #fdfbf7;
+            background-color: var(--theme-bg);
             color: #1f2937;
+            transition: background-color 0.3s, font-family 0.3s;
         }
 
         /* Classic Background Pattern */
         .classic-bg {
-            background-color: #fdfbf7;
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            background-color: var(--theme-bg);
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
 
-        /* Classic Card Style */
+        /* Dynamic Styles Overrides */
         .classic-card {
             background-color: #ffffff;
             border: 2px solid #e5e7eb;
@@ -56,32 +98,32 @@
         .classic-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            border-color: #d4af37;
+            border-color: var(--theme-secondary);
         }
 
         .classic-header {
-            background-color: #1b4332;
+            background-color: var(--theme-primary);
             color: #fdfbf7;
-            border-bottom: 3px solid #d4af37;
+            border-bottom: 3px solid var(--theme-secondary);
         }
 
         /* Buttons */
         .btn-classic {
-            background-color: #1b4332;
+            background-color: var(--theme-primary);
             color: white;
-            border: 1px solid #1b4332;
+            border: 1px solid var(--theme-primary);
             transition: all 0.2s;
         }
 
         .btn-classic:hover {
-            background-color: #2d6a4f;
+            filter: brightness(1.1);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .btn-outline {
             background-color: white;
-            color: #1b4332;
-            border: 2px solid #1b4332;
+            color: var(--theme-primary);
+            border: 2px solid var(--theme-primary);
             transition: all 0.2s;
         }
 
@@ -90,15 +132,31 @@
         }
 
         .btn-gold {
-            background: linear-gradient(to bottom, #fbbf24, #d97706);
+            background-color: var(--theme-secondary);
             color: #fff;
-            border: 1px solid #b45309;
+            border: 1px solid var(--theme-secondary);
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         .btn-gold:hover {
             filter: brightness(1.1);
             transform: translateY(-1px);
+        }
+
+        .text-classic-gold {
+            color: var(--theme-secondary) !important;
+        }
+
+        .text-classic-dark {
+            color: var(--theme-primary) !important;
+        }
+
+        .bg-classic-dark {
+            background-color: var(--theme-primary) !important;
+        }
+
+        .border-classic-gold {
+            border-color: var(--theme-secondary) !important;
         }
 
         /* Scrollbar */
@@ -149,6 +207,15 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, useMemo } = React;
 
+        // --- Constants: Fonts List ---
+        const AVAILABLE_FONTS = [
+            'Cairo', 'Amiri', 'Tajawal', 'Almarai', 'Lalezar', 'Scheherazade New', 'Lemonada',
+            'Reem Kufi', 'Changa', 'El Messiri', 'Mada', 'Harmattan', 'Lateef', 'Mirza',
+            'Rakkas', 'Katibeh', 'Aref Ruqaa', 'Vibes', 'Cairo Play', 'Readex Pro',
+            'Marhey', 'Alexandria', 'Kufam', 'Blaka', 'Gulzar', 'Noto Kufi Arabic',
+            'Noto Naskh Arabic', 'IBM Plex Sans Arabic', 'Rubik', 'Zain'
+        ];
+
         // --- Icons ---
         const Icon = ({ name, className = "", size = "" }) => {
             const iconMap = {
@@ -164,7 +231,8 @@
                 Download: "fa-download", UploadCloud: "fa-cloud-upload-alt", Save: "fa-save",
                 Play: "fa-play", User: "fa-user-tie", Images: "fa-images", Mobile: "fa-mobile-alt",
                 Maximize: "fa-expand", Minimize: "fa-compress", Medal: "fa-medal", Clock: "fa-clock",
-                Gamepad: "fa-gamepad", Type: "fa-font", Lock: "fa-lock", Key: "fa-key", Unlock: "fa-unlock"
+                Gamepad: "fa-gamepad", Type: "fa-font", Lock: "fa-lock", Key: "fa-key", Unlock: "fa-unlock",
+                Power: "fa-power-off", Refresh: "fa-sync-alt", Home: "fa-home"
             };
             return <i className={`fas ${iconMap[name] || 'fa-circle'} ${className}`} style={{ fontSize: size ? size + 'px' : 'inherit' }}></i>;
         };
@@ -178,12 +246,13 @@
             wrongTitle: 'إجابة خاطئة', wrongMessage: 'لا بأس، حاول مرة أخرى.', goToPrizes: 'استلام الجائزة',
             backToQuestions: 'عودة', explainAI: 'تفسير (AI)', knowAnswerAI: 'كشف الجواب (AI)',
             choosePrize: 'اختر الهدية', prizeTaken: 'تم', congrats: 'مبارك!', youWon: 'حصلت على', continue: 'استمرار',
-            dangerZone: 'منطقة الخطر', resetTitle: 'تصفير', resetDesc: 'إعادة تعيين البيانات.',
+            dangerZone: 'منطقة الخطر', resetTitle: 'تصفير', resetDesc: 'إعادة تعيين جميع البيانات والنتائج. هل أنت متأكد؟',
             confirmReset: 'تأكيد', alertTitle: 'تنبيه', confirmYes: 'نعم', confirmNo: 'لا',
             dataManagement: 'البيانات', exportData: 'تصدير', importData: 'استيراد', autoSaveInfo: 'حفظ تلقائي',
             sponsoredBy: 'برعاية', startQuiz: 'ابدأ المسابقة', rotateDevice: 'يرجى تدوير الجهاز',
             time: 'الوقت', enterPin: 'أدخل رمز المرور', incorrectPin: 'رمز خاطئ',
-            changePin: 'تغيير الرمز', newPin: 'الرمز الجديد', pinUpdated: 'تم تحديث الرمز'
+            changePin: 'تغيير الرمز', newPin: 'الرمز الجديد', pinUpdated: 'تم تحديث الرمز',
+            homeScreen: 'شاشة البداية'
         };
 
         const INITIAL_DATA = {
@@ -192,7 +261,10 @@
                 { id: 2, title: 'السيرة النبوية', icon: 'Moon', color: '#1e40af' },
                 { id: 3, title: 'الفقه والعقيدة', icon: 'Star', color: '#b45309' },
             ],
-            questions: [],
+            questions: [
+                { id: 101, sectionId: 1, text: 'كم عدد سور القرآن الكريم؟', type: 'choice', options: ['110', '114', '120', '99'], answer: '114', isAnswered: false },
+                { id: 102, sectionId: 1, text: 'ما هي أعظم سورة في القرآن الكريم؟', type: 'choice', options: ['سورة البقرة', 'سورة الكهف', 'سورة الفاتحة', 'سورة الإخلاص'], answer: 'سورة الفاتحة', isAnswered: false },
+            ],
             prizes: [
                 { id: 1, name: 'عطر فاخر', image: 'https://cdn-icons-png.flaticon.com/512/2829/2829929.png', isTaken: false },
                 { id: 2, name: 'مسبحة إلكترونية', image: 'https://cdn-icons-png.flaticon.com/512/4393/4393963.png', isTaken: false },
@@ -205,14 +277,15 @@
         const ClassicBackground = ({ config }) => {
             const style = {
                 position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
-                backgroundColor: '#fdfbf7',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+                backgroundColor: 'var(--theme-bg)',
             };
 
             if (config.bgMode === 'image' && config.customBgImage) {
                 style.backgroundImage = `url("${config.customBgImage}")`;
                 style.backgroundSize = 'cover';
                 style.backgroundPosition = 'center';
+            } else {
+                style.backgroundImage = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`;
             }
 
             return (
@@ -317,6 +390,10 @@
             const [questionForm, setQuestionForm] = useState({ sectionId: '', text: '', type: 'choice', op1: '', op2: '', op3: '', op4: '', answer: '' });
             const [prizeForm, setPrizeForm] = useState({ name: '' });
             const [newPin, setNewPin] = useState("");
+
+            // New Sponsor Form State
+            const [sponsorForm, setSponsorForm] = useState({ name: '' });
+            const sponsorFileInputRef = useRef(null);
 
             const prizeFileInputRef = useRef(null);
 
@@ -431,6 +508,41 @@
                 } else save(null);
             };
 
+            const addSponsor = (e) => {
+                e.preventDefault();
+                const file = sponsorFileInputRef.current?.files[0];
+                if (!file && !sponsorForm.name) return;
+
+                const saveSponsor = (img) => {
+                    const newSponsor = {
+                        id: Date.now(),
+                        name: sponsorForm.name,
+                        logo: img
+                    };
+                    setAppConfig(prev => ({
+                        ...prev,
+                        sponsors: [...(prev.sponsors || []), newSponsor]
+                    }));
+                    setSponsorForm({ name: '' });
+                    if (sponsorFileInputRef.current) sponsorFileInputRef.current.value = "";
+                };
+
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => saveSponsor(reader.result);
+                    reader.readAsDataURL(file);
+                } else {
+                    saveSponsor(null);
+                }
+            };
+
+            const removeSponsor = (id) => {
+                setAppConfig(prev => ({
+                    ...prev,
+                    sponsors: (prev.sponsors || []).filter(s => s.id !== id)
+                }));
+            };
+
             const handleChangePin = async () => {
                 if (newPin.length >= 4) {
                     try {
@@ -465,7 +577,7 @@
                             <h2 className="text-xl font-bold text-classic-gold mb-4 flex items-center gap-2"><Icon name="Settings" /> الإعدادات</h2>
                             {['general', 'gameplay', 'security', 'intro', 'home_images', 'sections', 'questions', 'prizes', 'texts', 'data'].map(t => (
                                 <button key={t} onClick={() => setTab(t)} className={`p-3 rounded text-right font-bold transition ${tab === t ? 'bg-classic-gold text-classic-dark' : 'hover:bg-white/10'}`}>
-                                    {t === 'general' ? 'المظهر' : t === 'gameplay' ? 'اللعب' : t === 'security' ? 'الأمان' : t === 'intro' ? 'البداية' : t === 'sections' ? 'الأقسام' : t === 'questions' ? 'الأسئلة' : t === 'prizes' ? 'الجوائز' : t === 'home_images' ? 'الصور' : t === 'texts' ? 'النصوص' : 'البيانات'}
+                                    {t === 'general' ? 'المظهر والألوان' : t === 'gameplay' ? 'اللعب' : t === 'security' ? 'الأمان' : t === 'intro' ? 'البداية والرعاة' : t === 'sections' ? 'الأقسام' : t === 'questions' ? 'الأسئلة' : t === 'prizes' ? 'الجوائز' : t === 'home_images' ? 'الصور' : t === 'texts' ? 'النصوص' : 'البيانات'}
                                 </button>
                             ))}
                             <button onClick={onClose} className="mt-auto p-3 rounded border border-red-400 text-red-300 hover:bg-red-900/20 font-bold">إغلاق</button>
@@ -474,6 +586,36 @@
                         <div className="flex-1 bg-gray-50 p-6 overflow-y-auto">
                             {tab === 'general' && (
                                 <div className="space-y-4">
+                                    <div className="classic-card p-6">
+                                        <h3 className="font-bold mb-4 text-classic-dark flex items-center gap-2"><Icon name="Palette" /> تخصيص الألوان</h3>
+                                        <div className="grid grid-cols-3 gap-4 mb-4">
+                                            <div>
+                                                <label className="block text-sm font-bold mb-1">اللون الأساسي</label>
+                                                <input type="color" value={appConfig.themeColors?.primary || '#1b4332'} onChange={e => setAppConfig(c => ({ ...c, themeColors: { ...(c.themeColors || {}), primary: e.target.value } }))} className="w-full h-10 cursor-pointer" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-bold mb-1">اللون الثانوي (الذهبي)</label>
+                                                <input type="color" value={appConfig.themeColors?.secondary || '#d4af37'} onChange={e => setAppConfig(c => ({ ...c, themeColors: { ...(c.themeColors || {}), secondary: e.target.value } }))} className="w-full h-10 cursor-pointer" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-bold mb-1">لون الخلفية</label>
+                                                <input type="color" value={appConfig.themeColors?.bg || '#fdfbf7'} onChange={e => setAppConfig(c => ({ ...c, themeColors: { ...(c.themeColors || {}), bg: e.target.value } }))} className="w-full h-10 cursor-pointer" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="classic-card p-6">
+                                        <h3 className="font-bold mb-4 text-classic-dark flex items-center gap-2"><Icon name="Type" /> الخطوط (30 خط)</h3>
+                                        <select
+                                            value={appConfig.fontFamily || 'Cairo'}
+                                            onChange={e => setAppConfig(c => ({ ...c, fontFamily: e.target.value }))}
+                                            className="w-full p-2 border rounded font-bold"
+                                            style={{ fontFamily: appConfig.fontFamily }}
+                                        >
+                                            {AVAILABLE_FONTS.map(font => <option key={font} value={font} style={{ fontFamily: font }}>{font}</option>)}
+                                        </select>
+                                    </div>
+
                                     <div className="classic-card p-6">
                                         <h3 className="font-bold mb-4 text-classic-dark">الخلفية</h3>
                                         <input type="file" onChange={e => handleConfigImageUpload('customBgImage', e)} className="block w-full text-sm mb-2" />
@@ -496,7 +638,7 @@
                                             <button onClick={handleChangePin} className="btn-classic px-4 rounded">حفظ</button>
                                         </div>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-2">الرمز الحالي يستخدم للدخول إلى لوحة التحكم.</p>
+                                    <p className="text-xs text-gray-500 mt-2">الرمز الحالي يستخدم للدخول إلى لوحة التحكم وإعادة ضبط المصنع.</p>
                                 </div>
                             )}
 
@@ -583,7 +725,7 @@
                             {tab === 'home_images' && (
                                 <div className="space-y-4">
                                     <div className="classic-card p-4">
-                                        <label className="block font-bold mb-2">تغيير حجم الشعارات</label>
+                                        <label className="block font-bold mb-2">تغيير حجم الشعارات الجانبية</label>
                                         <input
                                             type="range"
                                             min="0.5"
@@ -593,9 +735,6 @@
                                             onChange={e => setAppConfig(c => ({ ...c, logoScale: parseFloat(e.target.value) }))}
                                             className="w-full accent-classic-gold"
                                         />
-                                        <div className="text-center text-sm font-bold text-gray-500 mt-1">
-                                            {Math.round((appConfig.logoScale || 1) * 100)}%
-                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
@@ -612,13 +751,32 @@
 
                             {tab === 'intro' && (
                                 <div className="space-y-4 classic-card p-6">
-                                    <label className="flex items-center gap-2 font-bold"><input type="checkbox" checked={appConfig.enableIntro} onChange={e => setAppConfig(c => ({ ...c, enableIntro: e.target.checked }))} /> تفعيل شاشة البداية</label>
-                                    <div><label className="block text-sm font-bold mb-1">اسم الراعي</label><input value={appConfig.sponsorName} onChange={e => setAppConfig(c => ({ ...c, sponsorName: e.target.value }))} className="w-full p-2 border rounded" /></div>
-                                    <div><label className="block text-sm font-bold mb-1">شعار الراعي</label><input type="file" onChange={e => handleConfigImageUpload('sponsorLogo', e)} className="text-sm" /></div>
+                                    <label className="flex items-center gap-2 font-bold mb-4"><input type="checkbox" checked={appConfig.enableIntro} onChange={e => setAppConfig(c => ({ ...c, enableIntro: e.target.checked }))} /> تفعيل شاشة البداية</label>
 
-                                    <div className="pt-2 border-t border-gray-200">
+                                    <div className="border-t border-gray-200 pt-4">
+                                        <h4 className="font-bold mb-2">قائمة الرعاة (وسط الشاشة)</h4>
+                                        <form onSubmit={addSponsor} className="flex gap-2 mb-4 bg-gray-50 p-2 rounded">
+                                            <input value={sponsorForm.name} onChange={e => setSponsorForm({ ...sponsorForm, name: e.target.value })} placeholder="اسم الراعي" className="flex-1 p-2 border rounded" />
+                                            <input type="file" ref={sponsorFileInputRef} className="text-sm w-48" />
+                                            <button className="btn-classic px-4 rounded">إضافة</button>
+                                        </form>
+
+                                        <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                                            {(appConfig.sponsors || []).map(s => (
+                                                <div key={s.id} className="flex items-center justify-between p-2 border rounded bg-white">
+                                                    <div className="flex items-center gap-2">
+                                                        {s.logo && <img src={s.logo} className="w-8 h-8 object-contain" />}
+                                                        <span className="text-sm font-bold">{s.name}</span>
+                                                    </div>
+                                                    <button onClick={() => removeSponsor(s.id)} className="text-red-500"><Icon name="X" /></button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2 border-t border-gray-200 mt-4">
                                         <label className="block text-sm font-bold mb-2 flex justify-between">
-                                            <span>حجم شعار الراعي</span>
+                                            <span>حجم شعارات الرعاة</span>
                                             <span className="text-gray-500 text-xs">{Math.round((appConfig.sponsorLogoScale || 1) * 100)}%</span>
                                         </label>
                                         <input
@@ -649,7 +807,6 @@
                                 <div className="space-y-4 text-center">
                                     <button onClick={handleExport} className="btn-outline w-full p-3 rounded font-bold">تصدير البيانات (JSON)</button>
                                     <label className="btn-outline w-full p-3 rounded font-bold block cursor-pointer">استيراد بيانات<input type="file" onChange={handleImport} className="hidden" /></label>
-                                    <button onClick={onReset} className="w-full p-3 bg-red-100 text-red-700 border border-red-300 rounded font-bold">إعادة تعيين المصنع</button>
                                 </div>
                             )}
                         </div>
@@ -723,7 +880,6 @@
         };
 
         const ConfirmModal = ({ message, onConfirm, onCancel, labels }) => (
-
             <div className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                 <div className="bg-white rounded-lg p-8 max-w-sm w-full shadow-2xl border-t-8 border-classic-gold">
                     <div className="text-center mb-6">
@@ -745,14 +901,18 @@
             const [appConfig, setAppConfig] = useState({
                 bgMode: 'pattern', activePatternId: 'geo1', customBgImage: null,
                 baseTransparent: true, presentationMode: false, labels: DEFAULT_LABELS,
-                enableIntro: true, sponsorName: '', layoutImages: {},
-                enableTimer: true, enableTTS: false, adminPin: '1234', logoScale: 1, sponsorLogoScale: 1
+                enableIntro: true,
+                sponsors: [], // Array of {id, name, logo}
+                layoutImages: {},
+                enableTimer: true, enableTTS: false, adminPin: '1234', logoScale: 1, sponsorLogoScale: 1,
+                // New Styling Config
+                themeColors: { primary: '#1b4332', secondary: '#d4af37', bg: '#fdfbf7' },
+                fontFamily: 'Cairo'
             });
 
             const [introShown, setIntroShown] = useState(false);
             const [view, setView] = useState('home');
             const [isFullscreen, setIsFullscreen] = useState(false);
-            const [score, setScore] = useState(0);
             const [timer, setTimer] = useState(30);
 
             // UI State
@@ -761,7 +921,7 @@
             const [selectedPrize, setSelectedPrize] = useState(null);
             const [feedback, setFeedback] = useState(null);
             const [showSettings, setShowSettings] = useState(false);
-            const [showPinModal, setShowPinModal] = useState(false);
+            const [showPinModal, setShowPinModal] = useState({ show: false, action: null }); // Action: 'settings' or 'reset'
             const [confirmDialog, setConfirmDialog] = useState({ show: false, message: '', onConfirm: null });
             const [scale, setScale] = useState(1);
 
@@ -797,7 +957,7 @@
             // Initialize
             useEffect(() => { if (appConfig.enableIntro && !introShown) setView('intro'); }, [appConfig.enableIntro]);
 
-            useEffect(() => { const d = localStorage.getItem('qDataClassic3'), c = localStorage.getItem('qConfigClassic3'); if (d) setData(JSON.parse(d)); if (c) setAppConfig(JSON.parse(c)); }, []);
+            useEffect(() => { const d = localStorage.getItem('qDataClassic'), c = localStorage.getItem('qConfigClassic'); if (d) setData(JSON.parse(d)); if (c) setAppConfig(JSON.parse(c)); }, []);
 
             // --- FIREBASE INTEGRATION ---
             useEffect(() => {
@@ -831,8 +991,25 @@
                 }
             }, []);
 
-            useEffect(() => { localStorage.setItem('qDataClassic3', JSON.stringify(data)); }, [data]);
-            useEffect(() => { localStorage.setItem('qConfigClassic3', JSON.stringify(appConfig)); }, [appConfig]);
+            useEffect(() => { localStorage.setItem('qDataClassic', JSON.stringify(data)); }, [data]);
+            useEffect(() => { localStorage.setItem('qConfigClassic', JSON.stringify(appConfig)); }, [appConfig]);
+
+            // Dynamic Styling Injection
+            useEffect(() => {
+                const root = document.documentElement;
+                const p = appConfig.themeColors?.primary || '#1b4332';
+                const s = appConfig.themeColors?.secondary || '#d4af37';
+                const bg = appConfig.themeColors?.bg || '#fdfbf7';
+                const f = appConfig.fontFamily || 'Cairo';
+
+                root.style.setProperty('--theme-primary', p);
+                root.style.setProperty('--theme-secondary', s);
+                root.style.setProperty('--theme-bg', bg);
+                root.style.setProperty('--theme-font', f);
+
+                // Helper to lighten primary color for hover effects
+                root.style.setProperty('--theme-primary-light', p);
+            }, [appConfig.themeColors, appConfig.fontFamily]);
 
             // Resize & Fullscreen
             useEffect(() => {
@@ -872,24 +1049,22 @@
             const triggerConfetti = (isWin = false) => {
                 const confetti = window.confetti;
                 if (typeof confetti !== 'function') return;
+                const colors = [appConfig.themeColors?.primary || '#1b4332', appConfig.themeColors?.secondary || '#d4af37', '#ffffff'];
 
                 if (isWin) {
                     const end = Date.now() + 3000;
-                    const colors = ['#d4af37', '#ffffff', '#1b4332'];
                     (function frame() {
                         confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 }, colors });
                         confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 }, colors });
                         if (Date.now() < end) requestAnimationFrame(frame);
                     }());
-                } else confetti({ particleCount: 100, spread: 80, origin: { y: 0.7 }, colors: ['#1b4332', '#d4af37'] });
+                } else confetti({ particleCount: 100, spread: 80, origin: { y: 0.7 }, colors });
             };
 
-            const handleReset = () => setConfirmDialog({
-                show: true, message: appConfig.labels.resetDesc, onConfirm: () => {
-                    setData(prev => ({ ...prev, questions: prev.questions.map(q => ({ ...q, isAnswered: false })), prizes: prev.prizes.map(p => ({ ...p, isTaken: false })) }));
-                    setConfirmDialog({ show: false, message: '', onConfirm: null });
-                }
-            });
+            const performReset = () => {
+                setData(prev => ({ ...prev, questions: prev.questions.map(q => ({ ...q, isAnswered: false })), prizes: prev.prizes.map(p => ({ ...p, isTaken: false })) }));
+                alert("تم تصفير البيانات بنجاح");
+            };
 
             const handleAnswer = (opt) => {
                 setData(prev => ({ ...prev, questions: prev.questions.map(q => q.id === activeQuestion.id ? { ...q, isAnswered: true } : q) }));
@@ -908,13 +1083,26 @@
                 }
             };
 
-            // Settings Lock Handlers
-            const handleSettingsClick = () => {
-                setShowPinModal(true);
+            // Settings & Reset Lock Handlers
+            const handlePinRequest = (action) => {
+                setShowPinModal({ show: true, action });
             };
 
             const handlePinSuccess = () => {
-                setShowSettings(true);
+                const action = showPinModal.action;
+                setShowPinModal({ show: false, action: null });
+                if (action === 'settings') {
+                    setShowSettings(true);
+                } else if (action === 'reset') {
+                    setConfirmDialog({
+                        show: true,
+                        message: appConfig.labels.resetDesc,
+                        onConfirm: () => {
+                            performReset();
+                            setConfirmDialog({ show: false, message: '', onConfirm: null });
+                        }
+                    });
+                }
             };
 
             // AI Logic
@@ -950,26 +1138,34 @@
             // --- Views Content ---
             const IntroView = () => (
                 <div className="flex flex-col items-center justify-center h-full w-full animate-fade-in relative z-10 p-12 text-center">
-                    <div className="classic-card p-12 bg-white max-w-4xl w-full flex flex-col items-center shadow-2xl">
-                        {appConfig.layoutImages?.sponsorLogo && (
-                            <div style={{ height: `${8 * (appConfig.sponsorLogoScale || 1)}rem` }} className="mb-8 flex items-end justify-center transition-all duration-300">
-                                <img
-                                    src={appConfig.layoutImages.sponsorLogo}
-                                    className="h-full w-auto object-contain"
-                                />
-                            </div>
-                        )}
-                        <h1 className="text-7xl font-bold text-classic-dark mb-4 font-amiri border-b-2 border-classic-gold pb-4 px-8">{appConfig.labels.appTitle}</h1>
+                    <div className="classic-card p-12 bg-white max-w-5xl w-full flex flex-col items-center shadow-2xl relative overflow-hidden">
+
+                        <h1 className="text-7xl font-bold text-classic-dark mb-4 font-amiri border-b-2 border-classic-gold pb-4 px-8 mt-4">{appConfig.labels.appTitle}</h1>
                         <p className="text-2xl text-gray-600 font-bold mb-10">{appConfig.labels.appSubtitle}</p>
 
-                        {appConfig.sponsorName && (
-                            <div className="flex items-center gap-3 bg-gray-50 px-6 py-2 rounded border border-gray-300 mb-10 shadow-sm">
-                                <span className="text-gray-500 font-bold">{appConfig.labels.sponsoredBy}</span>
-                                <span className="text-classic-dark font-bold">{appConfig.sponsorName}</span>
+                        {/* Multiple Sponsors Grid */}
+                        {appConfig.sponsors && appConfig.sponsors.length > 0 && (
+                            <div className="mb-10 w-full">
+                                <div className="text-gray-500 font-bold mb-4 text-sm uppercase tracking-widest">{appConfig.labels.sponsoredBy}</div>
+                                <div className="flex flex-wrap items-center justify-center gap-8">
+                                    {appConfig.sponsors.map(sponsor => (
+                                        <div key={sponsor.id} className="flex flex-col items-center gap-2 transition-transform hover:scale-110">
+                                            {sponsor.logo && (
+                                                <img
+                                                    src={sponsor.logo}
+                                                    className="object-contain drop-shadow-md"
+                                                    style={{ height: `${6 * (appConfig.sponsorLogoScale || 1)}rem` }}
+                                                    alt={sponsor.name}
+                                                />
+                                            )}
+                                            {sponsor.name && <span className="text-classic-dark font-bold text-lg">{sponsor.name}</span>}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
 
-                        <button onClick={() => { setIntroShown(true); setView('home') }} className="btn-classic text-2xl font-bold py-4 px-16 rounded-full shadow-lg">
+                        <button onClick={() => { setIntroShown(true); setView('home') }} className="btn-classic text-2xl font-bold py-4 px-16 rounded-full shadow-lg mt-auto">
                             {appConfig.labels.startQuiz}
                         </button>
                     </div>
@@ -980,8 +1176,8 @@
                 <div className="h-full w-full relative flex flex-col font-cairo select-none" dir="rtl">
                     <OrientationGuard labels={appConfig.labels} />
 
-                    <header className="absolute top-0 w-full p-4 z-30 flex justify-between items-center pointer-events-none bg-white/90 border-b border-gray-200 shadow-sm">
-                        <div className="pointer-events-auto flex gap-4">
+                    <header className="absolute top-0 w-full p-4 z-30 flex justify-between items-center pointer-events-none bg-white/90 border-b border-gray-200 shadow-sm transition-colors">
+                        <div className="pointer-events-auto flex gap-2">
                             {view !== 'intro' && (
                                 <div className="flex items-center gap-2 px-2">
                                     <Icon name="Moon" className="text-classic-dark" />
@@ -990,10 +1186,33 @@
                             )}
                         </div>
                         <div className="flex gap-2 pointer-events-auto">
+                            {/* Reset Factory Button (Outside Settings) - Direct Confirmation */}
+                            {view === 'home' && (
+                                <button onClick={() => setConfirmDialog({
+                                    show: true,
+                                    message: appConfig.labels.resetDesc,
+                                    onConfirm: () => {
+                                        performReset();
+                                        setConfirmDialog({ show: false, message: '', onConfirm: null });
+                                    }
+                                })} className="bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white transition w-9 h-9 rounded flex items-center justify-center" title={appConfig.labels.resetTitle}>
+                                    <Icon name="Trash2" />
+                                </button>
+                            )}
+
+                            {/* Back to Intro Screen Button */}
+                            {view !== 'intro' && (
+                                <button onClick={() => setView('intro')} className="btn-outline w-9 h-9 rounded flex items-center justify-center bg-gray-100" title={appConfig.labels.homeScreen}>
+                                    <Icon name="Home" />
+                                </button>
+                            )}
+
                             {view !== 'home' && view !== 'intro' && <button onClick={() => setView('home')} className="btn-outline px-4 py-1 rounded font-bold text-sm"><Icon name="Grid" /> {appConfig.labels.mainMenu}</button>}
+
                             <button onClick={toggleFullscreen} className="btn-outline w-9 h-9 rounded flex items-center justify-center" title="ملء الشاشة"><Icon name={isFullscreen ? 'Minimize' : 'Maximize'} /></button>
-                            {/* Settings Button with Lock */}
-                            <button onClick={handleSettingsClick} className="btn-outline w-9 h-9 rounded flex items-center justify-center"><Icon name="Settings" /></button>
+
+                            {/* Settings Button */}
+                            <button onClick={() => handlePinRequest('settings')} className="btn-outline w-9 h-9 rounded flex items-center justify-center"><Icon name="Settings" /></button>
                         </div>
                     </header>
 
@@ -1040,6 +1259,10 @@
                                         <button onClick={() => setView('home')} className="btn-outline w-12 h-12 rounded-full flex items-center justify-center text-xl hover:bg-slate-100 transition shadow-sm" title={appConfig.labels.backToSections}>
                                             <Icon name="ArrowRight" />
                                         </button>
+                                        {/* Intro Shortcut */}
+                                        <button onClick={() => setView('intro')} className="btn-outline w-12 h-12 rounded-full flex items-center justify-center text-xl hover:bg-slate-100 transition shadow-sm">
+                                            <Icon name="Home" />
+                                        </button>
                                         <h2 className="text-4xl font-bold text-classic-dark font-amiri">{activeSection.title}</h2>
                                     </div>
                                     <button onClick={() => generateAIQuestions(activeSection.title, activeSection.id)} disabled={isGenerating} className="btn-outline px-6 py-2 rounded flex items-center gap-2 font-bold">
@@ -1069,7 +1292,10 @@
                                             </div>
                                         )}
 
-                                        <button onClick={() => setView('section')} className="absolute top-6 left-6 w-10 h-10 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border border-white/30"><Icon name="X" size="24" /></button>
+                                        <div className="absolute top-6 left-6 flex gap-2">
+                                            <button onClick={() => setView('intro')} className="w-10 h-10 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border border-white/30"><Icon name="Home" size="20" /></button>
+                                            <button onClick={() => setView('section')} className="w-10 h-10 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border border-white/30"><Icon name="X" size="24" /></button>
+                                        </div>
                                     </div>
 
                                     <div className="p-8 bg-gray-50 flex-1 flex flex-col justify-center relative">
@@ -1141,8 +1367,8 @@
                         )}
                     </main>
 
-                    {showPinModal && <PinModal isOpen={showPinModal} onClose={() => setShowPinModal(false)} onSuccess={handlePinSuccess} labels={appConfig.labels} currentPin={appConfig.adminPin} />}
-                    {showSettings && <SettingsModal appConfig={appConfig} setAppConfig={setAppConfig} data={data} setData={setData} onClose={() => setShowSettings(false)} onReset={handleReset} apiKey={apiKey} />}
+                    {showPinModal.show && <PinModal isOpen={showPinModal.show} onClose={() => setShowPinModal({ show: false, action: null })} onSuccess={handlePinSuccess} labels={appConfig.labels} currentPin={appConfig.adminPin} />}
+                    {showSettings && <SettingsModal appConfig={appConfig} setAppConfig={setAppConfig} data={data} setData={setData} onClose={() => setShowSettings(false)} onReset={performReset} apiKey={apiKey} />}
                     {confirmDialog.show && <ConfirmModal message={confirmDialog.message} onConfirm={confirmDialog.onConfirm} onCancel={() => setConfirmDialog({ show: false, message: '', onConfirm: null })} labels={appConfig.labels} />}
                     {updateStatus && <UpdateModal
                         status={updateStatus}
