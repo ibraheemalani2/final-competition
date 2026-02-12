@@ -24,7 +24,7 @@ function createWindow() {
     });
 
     // Load the index.html of the app.
-    mainWindow.loadFile('index.html');
+    mainWindow.loadFile('dist/index.html');
 
     // Create custom menu
     createMenu();

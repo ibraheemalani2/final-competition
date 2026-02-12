@@ -1,0 +1,1190 @@
+const { useState, useEffect, useRef, useMemo } = React;
+
+// --- Constants: Fonts List ---
+const AVAILABLE_FONTS = [
+    'Cairo', 'Amiri', 'Tajawal', 'Almarai', 'Lalezar', 'Scheherazade New', 'Lemonada',
+    'Reem Kufi', 'Changa', 'El Messiri', 'Mada', 'Harmattan', 'Lateef', 'Mirza',
+    'Rakkas', 'Katibeh', 'Aref Ruqaa', 'Vibes', 'Cairo Play', 'Readex Pro',
+    'Marhey', 'Alexandria', 'Kufam', 'Blaka', 'Gulzar', 'Noto Kufi Arabic',
+    'Noto Naskh Arabic', 'IBM Plex Sans Arabic', 'Rubik', 'Zain'
+];
+
+// --- Icons ---
+const Icon = ({ name, className = "", size = "" }) => {
+    const iconMap = {
+        BookOpen: "fa-book-open", Moon: "fa-moon", Star: "fa-star", Trophy: "fa-trophy",
+        ArrowRight: "fa-arrow-right", Settings: "fa-cog", Gift: "fa-gift",
+        CheckCircle: "fa-check-circle", XCircle: "fa-times-circle",
+        Sparkles: "fa-magic", Loader2: "fa-spinner fa-spin", Info: "fa-info-circle",
+        Plus: "fa-plus", Trash2: "fa-trash-alt", Edit3: "fa-pen",
+        HelpCircle: "fa-question-circle", AlertTriangle: "fa-exclamation-triangle",
+        X: "fa-times", Upload: "fa-upload", Palette: "fa-palette", Layout: "fa-layer-group",
+        MessageSquare: "fa-comment-alt", ImageIcon: "fa-image", Grid: "fa-th-large",
+        Monitor: "fa-desktop", CheckSquare: "fa-check-square", RotateCcw: "fa-undo",
+        Download: "fa-download", UploadCloud: "fa-cloud-upload-alt", Save: "fa-save",
+        Play: "fa-play", User: "fa-user-tie", Images: "fa-images", Mobile: "fa-mobile-alt",
+        Maximize: "fa-expand", Minimize: "fa-compress", Medal: "fa-medal", Clock: "fa-clock",
+        Gamepad: "fa-gamepad", Type: "fa-font", Lock: "fa-lock", Key: "fa-key", Unlock: "fa-unlock",
+        Power: "fa-power-off", Refresh: "fa-sync-alt", Home: "fa-home"
+    };
+    return <i className={`fas ${iconMap[name] || 'fa-circle'} ${className}`} style={{ fontSize: size ? size + 'px' : 'inherit' }}></i>;
+};
+
+// --- Data & Config ---
+const DEFAULT_LABELS = {
+    mainMenu: 'الرئيسية', controlPanel: 'الإعدادات', appTitle: 'المسابقة الكبرى', appSubtitle: 'العلم نور',
+    chooseCategory: 'اختر المجال', questionsRemaining: 'سؤال', backToSections: 'رجوع',
+    generateAI: 'توليد (AI)', generating: 'جاري التحضير...', answered: 'مجاب', clickToOpen: 'فتح',
+    sectionCompleted: 'أحسنت!', correctTitle: 'إجابة صحيحة', correctMessage: 'زادك الله علمًا وتوفيقًا.',
+    wrongTitle: 'إجابة خاطئة', wrongMessage: 'لا بأس، حاول مرة أخرى.', goToPrizes: 'استلام الجائزة',
+    backToQuestions: 'عودة', explainAI: 'تفسير (AI)', knowAnswerAI: 'كشف الجواب (AI)',
+    choosePrize: 'اختر الهدية', prizeTaken: 'تم', congrats: 'مبارك!', youWon: 'حصلت على', continue: 'استمرار',
+    dangerZone: 'منطقة الخطر', resetTitle: 'تصفير', resetDesc: 'إعادة تعيين جميع البيانات والنتائج. هل أنت متأكد؟',
+    confirmReset: 'تأكيد', alertTitle: 'تنبيه', confirmYes: 'نعم', confirmNo: 'لا',
+    dataManagement: 'البيانات', exportData: 'تصدير', importData: 'استيراد', autoSaveInfo: 'حفظ تلقائي',
+    sponsoredBy: 'برعاية', startQuiz: 'ابدأ المسابقة', rotateDevice: 'يرجى تدوير الجهاز',
+    time: 'الوقت', enterPin: 'أدخل رمز المرور', incorrectPin: 'رمز خاطئ',
+    changePin: 'تغيير الرمز', newPin: 'الرمز الجديد', pinUpdated: 'تم تحديث الرمز',
+    homeScreen: 'شاشة البداية'
+};
+
+const INITIAL_DATA = {
+    sections: [
+        { id: 1, title: 'القرآن الكريم', icon: 'BookOpen', color: '#1b4332' },
+        { id: 2, title: 'السيرة النبوية', icon: 'Moon', color: '#1e40af' },
+        { id: 3, title: 'الفقه والعقيدة', icon: 'Star', color: '#b45309' },
+    ],
+    questions: [
+        { id: 101, sectionId: 1, text: 'كم عدد سور القرآن الكريم؟', type: 'choice', options: ['110', '114', '120', '99'], answer: '114', isAnswered: false },
+        { id: 102, sectionId: 1, text: 'ما هي أعظم سورة في القرآن الكريم؟', type: 'choice', options: ['سورة البقرة', 'سورة الكهف', 'سورة الفاتحة', 'سورة الإخلاص'], answer: 'سورة الفاتحة', isAnswered: false },
+    ],
+    prizes: [
+        { id: 1, name: 'عطر فاخر', image: 'https://cdn-icons-png.flaticon.com/512/2829/2829929.png', isTaken: false },
+        { id: 2, name: 'مسبحة إلكترونية', image: 'https://cdn-icons-png.flaticon.com/512/4393/4393963.png', isTaken: false },
+        { id: 3, name: 'مصحف مذهب', image: 'https://cdn-icons-png.flaticon.com/512/3023/3023573.png', isTaken: false },
+        { id: 4, name: 'بطاقة شراء', image: 'https://cdn-icons-png.flaticon.com/512/10530/10530869.png', isTaken: false },
+    ]
+};
+
+// --- Visual Components ---
+const ClassicBackground = ({ config }) => {
+    const style = {
+        position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+        backgroundColor: 'var(--theme-bg)',
+    };
+
+    if (config.bgMode === 'image' && config.customBgImage) {
+        style.backgroundImage = `url("${config.customBgImage}")`;
+        style.backgroundSize = 'cover';
+        style.backgroundPosition = 'center';
+    } else {
+        style.backgroundImage = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`;
+    }
+
+    return (
+        <div style={style}>
+            {config.baseTransparent && <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px]"></div>}
+        </div>
+    );
+};
+
+const OrientationGuard = ({ labels }) => (
+    <div id="portrait-warning" className="fixed inset-0 z-[200] bg-classic-dark flex flex-col items-center justify-center text-white p-8 text-center animate-fade-in border-4 border-classic-gold m-4 rounded-xl">
+        <Icon name="Mobile" size="48" className="text-classic-gold mb-4 animate-bounce" />
+        <h2 className="text-3xl font-bold mb-4 text-classic-gold font-amiri">{labels.rotateDevice}</h2>
+    </div>
+);
+
+// --- PIN Modal ---
+const PinModal = ({ isOpen, onClose, onSuccess, labels }) => {
+    const [pin, setPin] = useState("");
+    const [error, setError] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const inputRef = useRef(null);
+
+    useEffect(() => {
+        if (isOpen) {
+            setPin("");
+            setError(false);
+            setIsLoading(false);
+            setTimeout(() => inputRef.current?.focus(), 100);
+        }
+    }, [isOpen]);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (isLoading) return;
+
+        setIsLoading(true);
+        let isValid = false;
+
+        try {
+            if (window.api && window.api.checkAdminPassword) {
+                isValid = await window.api.checkAdminPassword(pin);
+            } else {
+                console.error("API checkAdminPassword not available");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+
+        setIsLoading(false);
+
+        if (isValid) {
+            onSuccess();
+            onClose();
+        } else {
+            setError(true);
+            setPin("");
+            setTimeout(() => setError(false), 2000);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-[160] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl p-8 max-w-sm w-full shadow-2xl border-t-8 border-classic-dark animate-fade-in">
+                <div className="text-center">
+                    <div className="w-16 h-16 bg-classic-bg rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-classic-gold">
+                        <Icon name={error ? "XCircle" : "Lock"} size="32" className={error ? "text-red-500" : "text-classic-dark"} />
+                    </div>
+                    <h3 className="text-xl font-bold text-classic-dark mb-6 font-amiri">{labels.enterPin}</h3>
+                    <form onSubmit={handleSubmit}>
+                        <input
+                            ref={inputRef}
+                            type="password"
+                            value={pin}
+                            onChange={(e) => setPin(e.target.value)}
+                            maxLength="20"
+                            disabled={isLoading}
+                            className={`w-full p-4 border-2 rounded-lg text-center text-2xl font-bold tracking-widest mb-4 outline-none transition ${error ? 'border-red-500 bg-red-50' : 'border-classic-gold focus:border-classic-dark'} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            placeholder="••••"
+                        />
+                        {error && <p className="text-red-500 text-sm font-bold mb-4 animate-pulse">{labels.incorrectPin}</p>}
+                        <div className="flex gap-2">
+                            <button type="button" onClick={onClose} disabled={isLoading} className="flex-1 py-3 rounded bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition disabled:opacity-50">{labels.confirmNo}</button>
+                            <button type="submit" disabled={isLoading} className="flex-1 py-3 rounded bg-classic-dark text-white font-bold hover:bg-classic-green transition disabled:opacity-50 display-flex items-center justify-center gap-2">
+                                {isLoading ? <Icon name="Loader2" /> : labels.confirmReset}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- Settings Modal ---
+const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onReset, apiKey }) => {
+    const [tab, setTab] = useState('general');
+    const [editingId, setEditingId] = useState(null);
+    const [sectionForm, setSectionForm] = useState({ title: '', color: '#1b4332' });
+    const [questionForm, setQuestionForm] = useState({ sectionId: '', text: '', type: 'choice', op1: '', op2: '', op3: '', op4: '', answer: '' });
+    const [prizeForm, setPrizeForm] = useState({ name: '' });
+    const [newPin, setNewPin] = useState("");
+
+    // New Sponsor Form State
+    const [sponsorForm, setSponsorForm] = useState({ name: '' });
+    const sponsorFileInputRef = useRef(null);
+
+    const prizeFileInputRef = useRef(null);
+
+    const handleConfigImageUpload = (key, e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setAppConfig(prev => {
+                    if (key === 'customBgImage') return { ...prev, bgMode: 'image', customBgImage: reader.result };
+                    return { ...prev, layoutImages: { ...prev.layoutImages, [key]: reader.result } };
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const removeConfigImage = (key) => {
+        setAppConfig(prev => {
+            const newLayout = { ...prev.layoutImages };
+            delete newLayout[key];
+            return { ...prev, layoutImages: newLayout };
+        });
+    };
+
+    const updateLabel = (key, value) => setAppConfig(prev => ({ ...prev, labels: { ...prev.labels, [key]: value } }));
+
+    const handleExport = () => {
+        const exportData = { appConfig, data, timestamp: new Date().toISOString() };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData));
+        const anchor = document.createElement('a');
+        anchor.href = dataStr;
+        anchor.download = "quiz_data.json";
+        anchor.click();
+    };
+
+    const handleImport = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    if (imported.data && imported.appConfig) {
+                        if (window.confirm("تأكيد استبدال البيانات؟")) {
+                            setData(imported.data);
+                            setAppConfig(imported.appConfig);
+                            alert("تم!");
+                        }
+                    } else alert("ملف غير صالح");
+                } catch (err) { alert("خطأ"); }
+            };
+            reader.readAsText(file);
+        }
+    };
+
+    const saveSection = (e) => {
+        e.preventDefault();
+        if (editingId) setData(prev => ({ ...prev, sections: prev.sections.map(s => s.id === editingId ? { ...s, title: sectionForm.title, color: sectionForm.color } : s) }));
+        else setData(prev => ({ ...prev, sections: [...prev.sections, { id: Date.now(), title: sectionForm.title, icon: 'Star', color: sectionForm.color }] }));
+        setEditingId(null);
+        setSectionForm({ title: '', color: '#1b4332' });
+    };
+
+    const saveQuestion = async (e) => {
+        e.preventDefault();
+        const { text, type, op1, op2, op3, op4, answer, sectionId } = questionForm;
+        if (!sectionId || !answer) return alert("البيانات ناقصة");
+        const sId = parseInt(sectionId);
+        const options = type === 'boolean' ? ['صح', 'خطأ'] : [op1, op2, op3, op4];
+
+        // Prepare data for Firestore (or local)
+        // Note: We don't need 'id' here for new items, Firestore generates it.
+        // We don't overwrite isAnswered on edit unless intended.
+        const qData = { text, type, options, answer, sectionId: sId };
+
+        if (window.api && window.api.addQuestion) {
+            try {
+                if (editingId) {
+                    await window.api.updateQuestion(editingId, qData);
+                } else {
+                    await window.api.addQuestion({ ...qData, isAnswered: false });
+                }
+            } catch (err) {
+                console.error("Error saving to Firestore:", err);
+                alert("حدث خطأ أثناء الحفظ في قاعدة البيانات");
+            }
+        } else {
+            // Fallback to local state if API is not available
+            const localQData = { ...qData, id: Date.now(), isAnswered: false };
+            if (editingId) setData(prev => ({ ...prev, questions: prev.questions.map(q => q.id === editingId ? { ...q, ...qData } : q) }));
+            else setData(prev => ({ ...prev, questions: [...prev.questions, localQData] }));
+        }
+
+        setEditingId(null);
+        setQuestionForm({ sectionId: '', text: '', type: 'choice', op1: '', op2: '', op3: '', op4: '', answer: '' });
+    };
+
+    const savePrize = (e) => {
+        e.preventDefault();
+        const file = prizeFileInputRef.current?.files[0];
+        const save = (img) => {
+            if (editingId) setData(prev => ({ ...prev, prizes: prev.prizes.map(p => p.id === editingId ? { ...p, name: prizeForm.name, image: img || p.image } : p) }));
+            else setData(prev => ({ ...prev, prizes: [...prev.prizes, { id: Date.now(), name: prizeForm.name, image: img || 'https://cdn-icons-png.flaticon.com/512/3023/3023573.png', isTaken: false }] }));
+            setEditingId(null);
+            setPrizeForm({ name: '' });
+        };
+        if (file) {
+            const r = new FileReader();
+            r.onloadend = () => save(r.result);
+            r.readAsDataURL(file);
+        } else save(null);
+    };
+
+    const addSponsor = (e) => {
+        e.preventDefault();
+        const file = sponsorFileInputRef.current?.files[0];
+        if (!file && !sponsorForm.name) return;
+
+        const saveSponsor = (img) => {
+            const newSponsor = {
+                id: Date.now(),
+                name: sponsorForm.name,
+                logo: img
+            };
+            setAppConfig(prev => ({
+                ...prev,
+                sponsors: [...(prev.sponsors || []), newSponsor]
+            }));
+            setSponsorForm({ name: '' });
+            if (sponsorFileInputRef.current) sponsorFileInputRef.current.value = "";
+        };
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => saveSponsor(reader.result);
+            reader.readAsDataURL(file);
+        } else {
+            saveSponsor(null);
+        }
+    };
+
+    const removeSponsor = (id) => {
+        setAppConfig(prev => ({
+            ...prev,
+            sponsors: (prev.sponsors || []).filter(s => s.id !== id)
+        }));
+    };
+
+    const handleChangePin = async () => {
+        if (newPin.length >= 4) {
+            try {
+                if (window.api && window.api.changeAdminPassword) {
+                    const success = await window.api.changeAdminPassword(newPin);
+                    if (success) {
+                        setAppConfig(prev => ({ ...prev, adminPin: newPin }));
+                        setNewPin("");
+                        alert(appConfig.labels.pinUpdated || "تم تحديث الرمز");
+                    } else {
+                        alert("حدث خطأ أثناء تحديث الرمز في قاعدة البيانات");
+                    }
+                } else {
+                    // Fallback for local changes if API is missing (dev mode without electron/firebase properly loaded)
+                    setAppConfig(prev => ({ ...prev, adminPin: newPin }));
+                    setNewPin("");
+                    alert(appConfig.labels.pinUpdated || "تم تحديث الرمز (محلياً فقط)");
+                }
+            } catch (error) {
+                console.error("Error in handleChangePin:", error);
+                alert("حدث خطأ غير متوقع");
+            }
+        } else {
+            alert("الرمز يجب أن يكون 4 أرقام على الأقل");
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 text-slate-800 font-cairo">
+            <div className="bg-white rounded-lg w-full max-w-5xl h-[85vh] flex overflow-hidden shadow-2xl border-4 border-classic-gold">
+                <div className="w-64 bg-classic-dark text-white p-4 flex flex-col gap-2 overflow-y-auto">
+                    <h2 className="text-xl font-bold text-classic-gold mb-4 flex items-center gap-2"><Icon name="Settings" /> الإعدادات</h2>
+                    {['general', 'gameplay', 'security', 'intro', 'home_images', 'sections', 'questions', 'prizes', 'texts', 'data'].map(t => (
+                        <button key={t} onClick={() => setTab(t)} className={`p-3 rounded text-right font-bold transition ${tab === t ? 'bg-classic-gold text-classic-dark' : 'hover:bg-white/10'}`}>
+                            {t === 'general' ? 'المظهر والألوان' : t === 'gameplay' ? 'اللعب' : t === 'security' ? 'الأمان' : t === 'intro' ? 'البداية والرعاة' : t === 'sections' ? 'الأقسام' : t === 'questions' ? 'الأسئلة' : t === 'prizes' ? 'الجوائز' : t === 'home_images' ? 'الصور' : t === 'texts' ? 'النصوص' : 'البيانات'}
+                        </button>
+                    ))}
+                    <button onClick={onClose} className="mt-auto p-3 rounded border border-red-400 text-red-300 hover:bg-red-900/20 font-bold">إغلاق</button>
+                </div>
+
+                <div className="flex-1 bg-gray-50 p-6 overflow-y-auto">
+                    {tab === 'general' && (
+                        <div className="space-y-4">
+                            <div className="classic-card p-6">
+                                <h3 className="font-bold mb-4 text-classic-dark flex items-center gap-2"><Icon name="Palette" /> تخصيص الألوان</h3>
+                                <div className="grid grid-cols-3 gap-4 mb-4">
+                                    <div>
+                                        <label className="block text-sm font-bold mb-1">اللون الأساسي</label>
+                                        <input type="color" value={appConfig.themeColors?.primary || '#1b4332'} onChange={e => setAppConfig(c => ({ ...c, themeColors: { ...(c.themeColors || {}), primary: e.target.value } }))} className="w-full h-10 cursor-pointer" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold mb-1">اللون الثانوي (الذهبي)</label>
+                                        <input type="color" value={appConfig.themeColors?.secondary || '#d4af37'} onChange={e => setAppConfig(c => ({ ...c, themeColors: { ...(c.themeColors || {}), secondary: e.target.value } }))} className="w-full h-10 cursor-pointer" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold mb-1">لون الخلفية</label>
+                                        <input type="color" value={appConfig.themeColors?.bg || '#fdfbf7'} onChange={e => setAppConfig(c => ({ ...c, themeColors: { ...(c.themeColors || {}), bg: e.target.value } }))} className="w-full h-10 cursor-pointer" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="classic-card p-6">
+                                <h3 className="font-bold mb-4 text-classic-dark flex items-center gap-2"><Icon name="Type" /> الخطوط (30 خط)</h3>
+                                <select
+                                    value={appConfig.fontFamily || 'Cairo'}
+                                    onChange={e => setAppConfig(c => ({ ...c, fontFamily: e.target.value }))}
+                                    className="w-full p-2 border rounded font-bold"
+                                    style={{ fontFamily: appConfig.fontFamily }}
+                                >
+                                    {AVAILABLE_FONTS.map(font => <option key={font} value={font} style={{ fontFamily: font }}>{font}</option>)}
+                                </select>
+                            </div>
+
+                            <div className="classic-card p-6">
+                                <h3 className="font-bold mb-4 text-classic-dark">الخلفية</h3>
+                                <input type="file" onChange={e => handleConfigImageUpload('customBgImage', e)} className="block w-full text-sm mb-2" />
+                                <label className="flex items-center gap-2"><input type="checkbox" checked={appConfig.baseTransparent} onChange={e => setAppConfig(p => ({ ...p, baseTransparent: e.target.checked }))} /> تعتيم الخلفية</label>
+                            </div>
+                            <div className="classic-card p-6 flex justify-between">
+                                <span>عرض ملء الشاشة (16:9)</span>
+                                <input type="checkbox" checked={appConfig.presentationMode} onChange={e => setAppConfig(p => ({ ...p, presentationMode: e.target.checked }))} />
+                            </div>
+                        </div>
+                    )}
+
+                    {tab === 'security' && (
+                        <div className="space-y-4 classic-card p-6">
+                            <h3 className="font-bold mb-4 text-classic-dark flex items-center gap-2"><Icon name="Lock" /> إعدادات الأمان</h3>
+                            <div>
+                                <label className="block text-sm font-bold mb-2">تغيير رمز المرور (Admin PIN)</label>
+                                <div className="flex gap-2">
+                                    <input type="text" value={newPin} onChange={e => setNewPin(e.target.value)} className="p-2 border rounded flex-1" placeholder="الرمز الجديد" />
+                                    <button onClick={handleChangePin} className="btn-classic px-4 rounded">حفظ</button>
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">الرمز الحالي يستخدم للدخول إلى لوحة التحكم وإعادة ضبط المصنع.</p>
+                        </div>
+                    )}
+
+                    {tab === 'gameplay' && (
+                        <div className="space-y-4 classic-card p-6">
+                            <label className="flex items-center gap-2 font-bold text-gray-700">
+                                <input type="checkbox" checked={appConfig.enableTimer} onChange={e => setAppConfig(p => ({ ...p, enableTimer: e.target.checked }))} className="w-5 h-5" />
+                                تفعيل المؤقت
+                            </label>
+                            <label className="flex items-center gap-2 font-bold text-gray-700">
+                                <input type="checkbox" checked={appConfig.enableTTS} onChange={e => setAppConfig(p => ({ ...p, enableTTS: e.target.checked }))} className="w-5 h-5" />
+                                قراءة السؤال (TTS)
+                            </label>
+                        </div>
+                    )}
+
+                    {tab === 'sections' && (
+                        <div className="space-y-4">
+                            <form onSubmit={saveSection} className="p-4 bg-white rounded border border-gray-300 flex gap-2">
+                                <input value={sectionForm.title} onChange={e => setSectionForm({ ...sectionForm, title: e.target.value })} placeholder="اسم القسم" className="flex-1 p-2 border rounded" />
+                                <input type="color" value={sectionForm.color} onChange={e => setSectionForm({ ...sectionForm, color: e.target.value })} className="h-10 w-10 p-0 border-0 cursor-pointer" />
+                                <button className="btn-classic px-6 rounded font-bold">حفظ</button>
+                            </form>
+                            {data.sections.map(s => <div key={s.id} className="p-3 bg-white border rounded flex justify-between items-center"><div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full" style={{ backgroundColor: s.color }}></span><span className="font-bold">{s.title}</span></div><div className="flex gap-2"><button onClick={() => { setEditingId(s.id); setSectionForm({ title: s.title, color: s.color }) }} className="text-blue-600"><Icon name="Edit3" /></button><button onClick={() => { if (confirm('حذف؟')) setData(d => ({ ...d, sections: d.sections.filter(x => x.id !== s.id) })) }} className="text-red-600"><Icon name="Trash2" /></button></div></div>)}
+                        </div>
+                    )}
+
+                    {tab === 'questions' && (
+                        <div className="space-y-4">
+                            <form onSubmit={saveQuestion} className="p-4 bg-white rounded border border-gray-300 space-y-3">
+                                <select value={questionForm.sectionId} onChange={e => setQuestionForm({ ...questionForm, sectionId: e.target.value })} className="w-full p-2 border rounded"><option value="">اختر القسم...</option>{data.sections.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}</select>
+                                <textarea value={questionForm.text} onChange={e => setQuestionForm({ ...questionForm, text: e.target.value })} placeholder="نص السؤال" rows="2" className="w-full p-2 border rounded"></textarea>
+                                <div className="flex gap-4">
+                                    <label className="flex items-center gap-2"><input type="radio" name="qt" checked={questionForm.type === 'choice'} onChange={() => setQuestionForm({ ...questionForm, type: 'choice' })} /> خيارات</label>
+                                    <label className="flex items-center gap-2"><input type="radio" name="qt" checked={questionForm.type === 'boolean'} onChange={() => setQuestionForm({ ...questionForm, type: 'boolean' })} /> صح/خطأ</label>
+                                </div>
+                                {questionForm.type === 'choice' && <div className="grid grid-cols-2 gap-2">{['op1', 'op2', 'op3', 'op4'].map(k => <input key={k} value={questionForm[k]} onChange={e => setQuestionForm({ ...questionForm, [k]: e.target.value })} placeholder={`الخيار ${k.replace('op', '')}`} className="p-2 border rounded" />)}</div>}
+                                <select value={questionForm.answer} onChange={e => setQuestionForm({ ...questionForm, answer: e.target.value })} className="w-full p-2 border rounded font-bold bg-green-50 text-green-700">
+                                    <option value="">الإجابة الصحيحة</option>
+                                    {questionForm.type === 'boolean' ? <><option value="صح">صح</option><option value="خطأ">خطأ</option></> : ['op1', 'op2', 'op3', 'op4'].map(k => questionForm[k] && <option key={k} value={questionForm[k]}>{questionForm[k]}</option>)}
+                                </select>
+                                <button className="btn-classic w-full py-2 rounded font-bold">حفظ السؤال</button>
+                            </form>
+                            <div className="max-h-60 overflow-y-auto space-y-2">
+                                {data.questions.map(q => (
+                                    <div key={q.id} className="p-2 border rounded bg-white flex justify-between items-center text-sm">
+                                        <span className="truncate flex-1">{q.text}</span>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => { setEditingId(q.id); setQuestionForm({ ...q, op1: q.options[0], op2: q.options[1], op3: q.options[2], op4: q.options[3] }) }} className="text-blue-500"><Icon name="Edit3" /></button>
+                                            <button onClick={() => {
+                                                if (confirm('حذف السؤال؟')) {
+                                                    if (window.api && window.api.deleteQuestion) {
+                                                        window.api.deleteQuestion(q.id);
+                                                    } else {
+                                                        setData(d => ({ ...d, questions: d.questions.filter(x => x.id !== q.id) }));
+                                                    }
+                                                }
+                                            }} className="text-red-500"><Icon name="Trash2" /></button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {tab === 'prizes' && (
+                        <div className="space-y-4">
+                            <form onSubmit={savePrize} className="p-4 bg-white rounded border border-gray-300 flex gap-2 items-center">
+                                <input value={prizeForm.name} onChange={e => setPrizeForm({ ...prizeForm, name: e.target.value })} placeholder="اسم الجائزة" className="flex-1 p-2 border rounded" />
+                                <input type="file" ref={prizeFileInputRef} className="text-sm w-40" />
+                                <button className="btn-classic px-4 py-2 rounded font-bold">إضافة</button>
+                            </form>
+                            <div className="grid grid-cols-2 gap-2">
+                                {data.prizes.map(p => (
+                                    <div key={p.id} className="p-2 border rounded bg-white flex items-center justify-between">
+                                        <div className="flex items-center gap-2"><img src={p.image} className="w-8 h-8 object-contain" /><span>{p.name}</span></div>
+                                        <button onClick={() => setData(d => ({ ...d, prizes: d.prizes.filter(x => x.id !== p.id) }))} className="text-red-500"><Icon name="Trash2" /></button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {tab === 'home_images' && (
+                        <div className="space-y-4">
+                            <div className="classic-card p-4">
+                                <label className="block font-bold mb-2">تغيير حجم الشعارات الجانبية</label>
+                                <input
+                                    type="range"
+                                    min="0.5"
+                                    max="1.5"
+                                    step="0.1"
+                                    value={appConfig.logoScale || 1}
+                                    onChange={e => setAppConfig(c => ({ ...c, logoScale: parseFloat(e.target.value) }))}
+                                    className="w-full accent-classic-gold"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                {['topImage', 'bottomImage', 'rightImage', 'leftImage'].map(k => (
+                                    <div key={k} className="classic-card p-4">
+                                        <label className="block font-bold mb-2 text-sm">{k.replace('Image', '')}</label>
+                                        <input type="file" onChange={e => handleConfigImageUpload(k, e)} className="text-sm w-full" />
+                                        {appConfig.layoutImages?.[k] && <button onClick={() => removeConfigImage(k)} className="text-red-600 text-xs mt-2 font-bold">حذف الصورة</button>}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {tab === 'intro' && (
+                        <div className="space-y-4 classic-card p-6">
+                            <label className="flex items-center gap-2 font-bold mb-4"><input type="checkbox" checked={appConfig.enableIntro} onChange={e => setAppConfig(c => ({ ...c, enableIntro: e.target.checked }))} /> تفعيل شاشة البداية</label>
+
+                            <div className="border-t border-gray-200 pt-4">
+                                <h4 className="font-bold mb-2">قائمة الرعاة (وسط الشاشة)</h4>
+                                <form onSubmit={addSponsor} className="flex gap-2 mb-4 bg-gray-50 p-2 rounded">
+                                    <input value={sponsorForm.name} onChange={e => setSponsorForm({ ...sponsorForm, name: e.target.value })} placeholder="اسم الراعي" className="flex-1 p-2 border rounded" />
+                                    <input type="file" ref={sponsorFileInputRef} className="text-sm w-48" />
+                                    <button className="btn-classic px-4 rounded">إضافة</button>
+                                </form>
+
+                                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                                    {(appConfig.sponsors || []).map(s => (
+                                        <div key={s.id} className="flex items-center justify-between p-2 border rounded bg-white">
+                                            <div className="flex items-center gap-2">
+                                                {s.logo && <img src={s.logo} className="w-8 h-8 object-contain" />}
+                                                <span className="text-sm font-bold">{s.name}</span>
+                                            </div>
+                                            <button onClick={() => removeSponsor(s.id)} className="text-red-500"><Icon name="X" /></button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="pt-2 border-t border-gray-200 mt-4">
+                                <label className="text-sm font-bold mb-2 flex justify-between">
+                                    <span>حجم شعارات الرعاة</span>
+                                    <span className="text-gray-500 text-xs">{Math.round((appConfig.sponsorLogoScale || 1) * 100)}%</span>
+                                </label>
+                                <input
+                                    type="range"
+                                    min="0.5"
+                                    max="3.0"
+                                    step="0.1"
+                                    value={appConfig.sponsorLogoScale || 1}
+                                    onChange={e => setAppConfig(c => ({ ...c, sponsorLogoScale: parseFloat(e.target.value) }))}
+                                    className="w-full accent-classic-gold"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {tab === 'texts' && (
+                        <div className="grid grid-cols-2 gap-4">
+                            {Object.entries(appConfig.labels).map(([k, v]) => (
+                                <div key={k} className="flex flex-col">
+                                    <label className="text-xs font-bold text-gray-500 mb-1">{k}</label>
+                                    <input value={v} onChange={e => updateLabel(k, e.target.value)} className="p-2 border rounded text-sm" />
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {tab === 'data' && (
+                        <div className="space-y-4 text-center">
+                            <button onClick={handleExport} className="btn-outline w-full p-3 rounded font-bold">تصدير البيانات (JSON)</button>
+                            <label className="btn-outline w-full p-3 rounded font-bold block cursor-pointer">استيراد بيانات<input type="file" onChange={handleImport} className="hidden" /></label>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- Update Modal ---
+const UpdateModal = ({ status, progress, onDownload, onRestart, onClose, labels }) => {
+    if (!status) return null;
+
+    return (
+        <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg p-8 max-w-sm w-full shadow-2xl border-t-8 border-classic-gold animate-fade-in">
+                <div className="text-center mb-6">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-classic-bg rounded-full flex items-center justify-center border-2 border-classic-gold">
+                        {status === 'checking' && <Icon name="Loader2" size="32" className="text-classic-dark" />}
+                        {status === 'available' && <Icon name="Download" size="32" className="text-classic-dark" />}
+                        {status === 'no-update' && <Icon name="CheckCircle" size="32" className="text-green-600" />}
+                        {status === 'downloading' && <Icon name="Download" size="32" className="text-classic-dark animate-pulse" />}
+                        {status === 'ready' && <Icon name="Gift" size="32" className="text-classic-gold" />}
+                        {status === 'error' && <Icon name="AlertTriangle" size="32" className="text-red-500" />}
+                    </div>
+
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">
+                        {status === 'checking' && "جاري البحث عن تحديثات..."}
+                        {status === 'available' && "يتوفر إصدار جديد!"}
+                        {status === 'no-update' && "الإصدار الحالي هو الأحدث."}
+                        {status === 'downloading' && "جاري التنزيل..."}
+                        {status === 'ready' && "التحديث جاهز للتثبيت!"}
+                        {status === 'error' && "حدث خطأ أثناء التحديث"}
+                    </h3>
+
+                    <p className="text-gray-600">
+                        {status === 'available' && "هل ترغب في تنزيل التحديث الآن؟"}
+                        {status === 'downloading' && <span className="text-2xl font-bold text-classic-gold">{Math.round(progress)}%</span>}
+                        {status === 'ready' && "يجب إعادة تشغيل التطبيق لتثبيت التحديث."}
+                        {status === 'error' && "تأكد من اتصالك بالإنترنت وحاول مرة أخرى."}
+                    </p>
+                </div>
+
+                {status === 'downloading' && (
+                    <div className="w-full bg-gray-200 rounded-full h-4 mb-6 overflows-hidden">
+                        <div className="bg-classic-gold h-4 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                    </div>
+                )}
+
+                <div className="flex gap-3">
+                    {status === 'available' && (
+                        <>
+                            <button onClick={onClose} className="flex-1 py-2 rounded bg-gray-200 hover:bg-gray-300 font-bold">{labels.confirmNo}</button>
+                            <button onClick={onDownload} className="flex-1 py-2 rounded bg-classic-dark text-white hover:bg-classic-green font-bold">{labels.confirmYes}</button>
+                        </>
+                    )}
+
+                    {status === 'ready' && (
+                        <>
+                            <button onClick={onClose} className="flex-1 py-2 rounded bg-gray-200 hover:bg-gray-300 font-bold">لاحقاً</button>
+                            <button onClick={onRestart} className="flex-1 py-2 rounded bg-classic-gold text-white hover:brightness-110 font-bold">إعادة التشغيل</button>
+                        </>
+                    )}
+
+                    {(status === 'no-update' || status === 'error') && (
+                        <button onClick={onClose} className="flex-1 py-2 rounded bg-classic-dark text-white hover:bg-classic-green font-bold">إغلاق</button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ConfirmModal = ({ message, onConfirm, onCancel, labels }) => (
+    <div className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg p-8 max-w-sm w-full shadow-2xl border-t-8 border-classic-gold">
+            <div className="text-center mb-6">
+                <Icon name="AlertTriangle" size="40" className="text-classic-gold mb-3" />
+                <h3 className="text-xl font-bold text-gray-800">{labels.alertTitle}</h3>
+                <p className="text-gray-600 font-bold">{message}</p>
+            </div>
+            <div className="flex gap-3">
+                <button onClick={onCancel} className="flex-1 py-2 rounded bg-gray-200 hover:bg-gray-300 font-bold">{labels.confirmNo}</button>
+                <button onClick={onConfirm} className="flex-1 py-2 rounded bg-classic-dark text-white hover:bg-classic-green font-bold">{labels.confirmYes}</button>
+            </div>
+        </div>
+    </div>
+);
+
+// --- Main Application ---
+const App = () => {
+    const [data, setData] = useState(INITIAL_DATA);
+    const [appConfig, setAppConfig] = useState({
+        bgMode: 'pattern', activePatternId: 'geo1', customBgImage: null,
+        baseTransparent: true, presentationMode: false, labels: DEFAULT_LABELS,
+        enableIntro: true,
+        sponsors: [], // Array of {id, name, logo}
+        layoutImages: {},
+        enableTimer: true, enableTTS: false, adminPin: '1234', logoScale: 1, sponsorLogoScale: 1,
+        // New Styling Config
+        themeColors: { primary: '#1b4332', secondary: '#d4af37', bg: '#fdfbf7' },
+        fontFamily: 'Cairo'
+    });
+
+    const [introShown, setIntroShown] = useState(false);
+    const [view, setView] = useState('home');
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [timer, setTimer] = useState(30);
+
+    // UI State
+    const [activeSection, setActiveSection] = useState(null);
+    const [activeQuestion, setActiveQuestion] = useState(null);
+    const [selectedPrize, setSelectedPrize] = useState(null);
+    const [feedback, setFeedback] = useState(null);
+    const [showSettings, setShowSettings] = useState(false);
+    const [showPinModal, setShowPinModal] = useState({ show: false, action: null }); // Action: 'settings' or 'reset'
+    const [confirmDialog, setConfirmDialog] = useState({ show: false, message: '', onConfirm: null });
+    const [scale, setScale] = useState(1);
+
+    // AI State
+    const [aiExplanation, setAiExplanation] = useState(null);
+    const [isExplaining, setIsExplaining] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const apiKey = "";
+
+    // Update State
+    const [updateStatus, setUpdateStatus] = useState(null);
+    const [downloadProgress, setDownloadProgress] = useState(0);
+
+    // Auto Updater Events
+    useEffect(() => {
+        if (window.api) {
+            window.api.onUpdateMessage?.((args) => setUpdateStatus(args.status));
+            window.api.onUpdateAvailable?.((info) => setUpdateStatus('available'));
+            window.api.onUpdateNotAvailable?.((info) => setUpdateStatus('no-update'));
+            window.api.onDownloadProgress?.((progress) => {
+                setUpdateStatus('downloading');
+                setDownloadProgress(progress);
+            });
+            window.api.onUpdateDownloaded?.((info) => setUpdateStatus('ready'));
+            window.api.onUpdateError?.((err) => {
+                console.error("Update error:", err);
+                setUpdateStatus('error');
+            });
+        }
+    }, []);
+
+
+    // Initialize
+    useEffect(() => { if (appConfig.enableIntro && !introShown) setView('intro'); }, [appConfig.enableIntro]);
+
+    useEffect(() => { const d = localStorage.getItem('qDataClassic'), c = localStorage.getItem('qConfigClassic'); if (d) setData(JSON.parse(d)); if (c) setAppConfig(JSON.parse(c)); }, []);
+
+    // --- FIREBASE INTEGRATION ---
+    useEffect(() => {
+        // Initial Load
+        if (window.api && window.api.getQuestions) {
+            window.api.getQuestions().then(dbQuestions => {
+                console.log("Loaded questions from Firestore:", dbQuestions);
+                if (dbQuestions && dbQuestions.length > 0) {
+                    setData(prev => {
+                        // Merge logic: You might want to replace entirely or merge
+                        // Here we replace the questions array with the one from DB
+                        // But we need to make sure we don't lose 'isAnswered' status if it was persisted locally.
+                        // A simple approach is to trust Firestore as the Single Source of Truth for *questions content*,
+                        // but maybe keep local state for *isAnswered*?
+
+                        // For now, let's just load them. If you need sync 'isAnswered' state across devices, 
+                        // that needs writing back to Firestore.
+                        // Assuming we just want to LOAD questions:
+                        return { ...prev, questions: dbQuestions };
+                    });
+                }
+            }).catch(err => console.error("Failed to load questions:", err));
+
+            // Real-time Listeners
+            window.api.onQuestionsUpdate((updatedQuestions) => {
+                console.log("Realtime update:", updatedQuestions);
+                setData(prev => ({ ...prev, questions: updatedQuestions }));
+            });
+        } else {
+            console.error("Window API is not defined. Preload script might have failed.");
+        }
+    }, []);
+
+    useEffect(() => { localStorage.setItem('qDataClassic', JSON.stringify(data)); }, [data]);
+    useEffect(() => { localStorage.setItem('qConfigClassic', JSON.stringify(appConfig)); }, [appConfig]);
+
+    // Dynamic Styling Injection
+    useEffect(() => {
+        const root = document.documentElement;
+        const p = appConfig.themeColors?.primary || '#1b4332';
+        const s = appConfig.themeColors?.secondary || '#d4af37';
+        const bg = appConfig.themeColors?.bg || '#fdfbf7';
+        const f = appConfig.fontFamily || 'Cairo';
+
+        root.style.setProperty('--theme-primary', p);
+        root.style.setProperty('--theme-secondary', s);
+        root.style.setProperty('--theme-bg', bg);
+        root.style.setProperty('--theme-font', f);
+
+        // Helper to lighten primary color for hover effects
+        root.style.setProperty('--theme-primary-light', p);
+    }, [appConfig.themeColors, appConfig.fontFamily]);
+
+    // Resize & Fullscreen
+    useEffect(() => {
+        if (!appConfig.presentationMode) { setScale(1); return; }
+        const rs = () => setScale(Math.min(window.innerWidth / 1920, window.innerHeight / 1080));
+        window.addEventListener('resize', rs); rs(); return () => window.removeEventListener('resize', rs);
+    }, [appConfig.presentationMode]);
+
+    const toggleFullscreen = () => {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(console.log);
+        else document.exitFullscreen().then(() => setIsFullscreen(false)).catch(console.log);
+    };
+    useEffect(() => {
+        const h = () => setIsFullscreen(!!document.fullscreenElement);
+        document.addEventListener('fullscreenchange', h); return () => document.removeEventListener('fullscreenchange', h);
+    }, []);
+
+    // Timer
+    useEffect(() => {
+        let interval;
+        if (view === 'question' && !feedback && appConfig.enableTimer && timer > 0) {
+            interval = setInterval(() => setTimer(t => t - 1), 1000);
+        }
+        return () => clearInterval(interval);
+    }, [timer, view, feedback, appConfig.enableTimer]);
+
+    // TTS
+    const speak = (text) => {
+        if (!appConfig.enableTTS) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'ar-SA';
+        window.speechSynthesis.speak(u);
+    };
+
+    // Interactions
+    const triggerConfetti = (isWin = false) => {
+        const confetti = window.confetti;
+        if (typeof confetti !== 'function') return;
+        const colors = [appConfig.themeColors?.primary || '#1b4332', appConfig.themeColors?.secondary || '#d4af37', '#ffffff'];
+
+        if (isWin) {
+            const end = Date.now() + 3000;
+            (function frame() {
+                confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 }, colors });
+                confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 }, colors });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        } else confetti({ particleCount: 100, spread: 80, origin: { y: 0.7 }, colors });
+    };
+
+    const performReset = () => {
+        setData(prev => ({ ...prev, questions: prev.questions.map(q => ({ ...q, isAnswered: false })), prizes: prev.prizes.map(p => ({ ...p, isTaken: false })) }));
+        alert("تم تصفير البيانات بنجاح");
+    };
+
+    const handleAnswer = (opt) => {
+        setData(prev => ({ ...prev, questions: prev.questions.map(q => q.id === activeQuestion.id ? { ...q, isAnswered: true } : q) }));
+        if (opt === activeQuestion.answer) {
+            setFeedback('correct');
+            triggerConfetti(false);
+        } else { setFeedback('wrong'); }
+    };
+
+    const selectPrize = (id) => {
+        const p = data.prizes.find(pz => pz.id === id);
+        if (!p.isTaken) {
+            setSelectedPrize(p);
+            setData(prev => ({ ...prev, prizes: prev.prizes.map(pz => pz.id === id ? { ...pz, isTaken: true } : pz) }));
+            setView('prizeReveal'); triggerConfetti(true);
+        }
+    };
+
+    // Settings & Reset Lock Handlers
+    const handlePinRequest = (action) => {
+        setShowPinModal({ show: true, action });
+    };
+
+    const handlePinSuccess = () => {
+        const action = showPinModal.action;
+        setShowPinModal({ show: false, action: null });
+        if (action === 'settings') {
+            setShowSettings(true);
+        } else if (action === 'reset') {
+            setConfirmDialog({
+                show: true,
+                message: appConfig.labels.resetDesc,
+                onConfirm: () => {
+                    performReset();
+                    setConfirmDialog({ show: false, message: '', onConfirm: null });
+                }
+            });
+        }
+    };
+
+    // AI Logic
+    const generateAIQuestions = async (sectionTitle, sectionId) => {
+        setIsGenerating(true);
+        try {
+            const prompt = `Generate 5 multiple choice questions in Arabic about "${sectionTitle}". JSON format: [{"text":"?","options":["a","b","c","d"],"answer":"a","type":"choice"}]`;
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
+            const result = await response.json();
+            let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!text) throw new Error("No data");
+
+            let cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const newQ = JSON.parse(cleanedText).map((q, i) => ({ ...q, id: Date.now() + i, sectionId, isAnswered: false }));
+            setData(p => ({ ...p, questions: [...p.questions, ...newQ] }));
+            alert("تمت الإضافة بنجاح!");
+        } catch (e) { console.error(e); alert("حدث خطأ أثناء التوليد."); } finally { setIsGenerating(false); }
+    };
+
+    const explainAnswerWithAI = async (q, a) => {
+        setIsExplaining(true); setAiExplanation(null);
+        try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: `اشرح لماذا "${a}" هي إجابة "${q}" باختصار.` }] }] })
+            });
+            const json = await res.json();
+            setAiExplanation(json.candidates?.[0]?.content?.parts?.[0]?.text);
+        } catch { setAiExplanation("عذراً، الخدمة غير متاحة."); } finally { setIsExplaining(false); }
+    };
+
+    // --- Views Content ---
+    const IntroView = () => (
+        <div className="flex flex-col items-center justify-center h-full w-full animate-fade-in relative z-10 p-12 text-center">
+            <div className="classic-card p-12 bg-white max-w-5xl w-full flex flex-col items-center shadow-2xl relative overflow-hidden">
+
+                <h1 className="text-7xl font-bold text-classic-dark mb-4 font-amiri border-b-2 border-classic-gold pb-4 px-8 mt-4">{appConfig.labels.appTitle}</h1>
+                <p className="text-2xl text-gray-600 font-bold mb-10">{appConfig.labels.appSubtitle}</p>
+
+                {/* Multiple Sponsors Grid */}
+                {appConfig.sponsors && appConfig.sponsors.length > 0 && (
+                    <div className="mb-10 w-full">
+                        <div className="text-gray-500 font-bold mb-4 text-sm uppercase tracking-widest">{appConfig.labels.sponsoredBy}</div>
+                        <div className="flex flex-wrap items-center justify-center gap-8">
+                            {appConfig.sponsors.map(sponsor => (
+                                <div key={sponsor.id} className="flex flex-col items-center gap-2 transition-transform hover:scale-110">
+                                    {sponsor.logo && (
+                                        <img
+                                            src={sponsor.logo}
+                                            className="object-contain drop-shadow-md"
+                                            style={{ height: `${6 * (appConfig.sponsorLogoScale || 1)}rem` }}
+                                            alt={sponsor.name}
+                                        />
+                                    )}
+                                    {sponsor.name && <span className="text-classic-dark font-bold text-lg">{sponsor.name}</span>}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <button onClick={() => { setIntroShown(true); setView('home') }} className="btn-classic text-2xl font-bold py-4 px-16 rounded-full shadow-lg mt-auto">
+                    {appConfig.labels.startQuiz}
+                </button>
+            </div>
+        </div>
+    );
+
+    const content = (
+        <div className="h-full w-full relative flex flex-col font-cairo select-none" dir="rtl">
+            <OrientationGuard labels={appConfig.labels} />
+
+            <header className="absolute top-0 w-full p-4 z-30 flex justify-between items-center pointer-events-none bg-white/90 border-b border-gray-200 shadow-sm transition-colors">
+                <div className="pointer-events-auto flex gap-2">
+                    {view !== 'intro' && (
+                        <div className="flex items-center gap-2 px-2">
+                            <Icon name="Moon" className="text-classic-dark" />
+                            <span className="font-bold text-gray-700">{appConfig.labels.appTitle}</span>
+                        </div>
+                    )}
+                </div>
+                <div className="flex gap-2 pointer-events-auto">
+                    {/* Reset Factory Button (Outside Settings) - Direct Confirmation */}
+                    {view === 'home' && (
+                        <button onClick={() => setConfirmDialog({
+                            show: true,
+                            message: appConfig.labels.resetDesc,
+                            onConfirm: () => {
+                                performReset();
+                                setConfirmDialog({ show: false, message: '', onConfirm: null });
+                            }
+                        })} className="bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white transition w-9 h-9 rounded flex items-center justify-center" title={appConfig.labels.resetTitle}>
+                            <Icon name="Trash2" />
+                        </button>
+                    )}
+
+                    {/* Back to Intro Screen Button */}
+                    {view !== 'intro' && (
+                        <button onClick={() => setView('intro')} className="btn-outline w-9 h-9 rounded flex items-center justify-center bg-gray-100" title={appConfig.labels.homeScreen}>
+                            <Icon name="Home" />
+                        </button>
+                    )}
+
+                    {view !== 'home' && view !== 'intro' && <button onClick={() => setView('home')} className="btn-outline px-4 py-1 rounded font-bold text-sm"><Icon name="Grid" /> {appConfig.labels.mainMenu}</button>}
+
+                    <button onClick={toggleFullscreen} className="btn-outline w-9 h-9 rounded flex items-center justify-center" title="ملء الشاشة"><Icon name={isFullscreen ? 'Minimize' : 'Maximize'} /></button>
+
+                    {/* Settings Button */}
+                    <button onClick={() => handlePinRequest('settings')} className="btn-outline w-9 h-9 rounded flex items-center justify-center"><Icon name="Settings" /></button>
+                </div>
+            </header>
+
+            <main className="flex-1 relative z-10 flex items-center justify-center overflow-hidden pt-16">
+                {view === 'intro' && <IntroView />}
+
+                {view === 'home' && (
+                    <div className="w-full h-full flex flex-col relative animate-fade-in">
+                        {appConfig.layoutImages?.topImage && <img src={appConfig.layoutImages.topImage} className="absolute top-0 w-full h-24 object-contain object-top opacity-100 pointer-events-none z-0" />}
+                        {appConfig.layoutImages?.bottomImage && <img src={appConfig.layoutImages.bottomImage} className="absolute bottom-0 w-full h-24 object-contain object-bottom opacity-100 pointer-events-none z-0" />}
+
+                        <div className="flex-1 flex w-full h-full items-center justify-center relative z-10 p-8 gap-8">
+                            {appConfig.layoutImages?.rightImage && <img src={appConfig.layoutImages.rightImage} className="h-2/3 w-32 object-contain opacity-100 pointer-events-none hidden lg:block z-20" style={{ transform: `scale(${appConfig.logoScale || 1})` }} />}
+                            {appConfig.layoutImages?.leftImage && <img src={appConfig.layoutImages.leftImage} className="h-2/3 w-32 object-contain opacity-100 pointer-events-none hidden lg:block z-20" style={{ transform: `scale(${appConfig.logoScale || 1})` }} />}
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
+                                {data.sections.map((s, i) => (
+                                    <button key={s.id} onClick={() => { setActiveSection(s); setView('section') }} className="classic-card group h-80 p-6 flex flex-col justify-between text-right hover:border-classic-gold transition-all duration-200 hover:-translate-y-1">
+                                        <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-md text-white mb-4 border-4 border-white" style={{ background: s.color }}>
+                                            <Icon name={s.icon} />
+                                        </div>
+
+                                        <div>
+                                            <h3 className="text-3xl font-bold text-gray-800 mb-2 font-amiri">{s.title}</h3>
+                                            <div className="inline-flex items-center gap-2 bg-gray-100 px-3 py-1 rounded border border-gray-200">
+                                                <span className="w-2 h-2 rounded-full bg-classic-dark"></span>
+                                                <span className="text-gray-600 font-bold text-sm">{data.questions.filter(q => q.sectionId === s.id && !q.isAnswered).length} {appConfig.labels.questionsRemaining}</span>
+                                            </div>
+                                        </div>
+                                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-classic-dark group-hover:text-white transition-colors self-end">
+                                            <Icon name="ArrowRight" size="16" />
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {view === 'section' && activeSection && (
+                    <div className="w-full max-w-7xl animate-in zoom-in-95 p-8 h-full flex flex-col">
+                        <div className="flex justify-between items-center mb-8 bg-white p-4 rounded-lg border-2 border-gray-200 shadow-sm">
+                            <div className="flex items-center gap-4">
+                                <button onClick={() => setView('home')} className="btn-outline w-12 h-12 rounded-full flex items-center justify-center text-xl hover:bg-slate-100 transition shadow-sm" title={appConfig.labels.backToSections}>
+                                    <Icon name="ArrowRight" />
+                                </button>
+                                {/* Intro Shortcut */}
+                                <button onClick={() => setView('intro')} className="btn-outline w-12 h-12 rounded-full flex items-center justify-center text-xl hover:bg-slate-100 transition shadow-sm">
+                                    <Icon name="Home" />
+                                </button>
+                                <h2 className="text-4xl font-bold text-classic-dark font-amiri">{activeSection.title}</h2>
+                            </div>
+                            <button onClick={() => generateAIQuestions(activeSection.title, activeSection.id)} disabled={isGenerating} className="btn-outline px-6 py-2 rounded flex items-center gap-2 font-bold">
+                                {isGenerating ? <Icon name="Loader2" /> : <Icon name="Sparkles" className="text-purple-600" />}
+                                <span>{appConfig.labels.generateAI}</span>
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-6 flex-1 content-start overflow-y-auto custom-scrollbar p-2">
+                            {data.questions.filter(q => q.sectionId === activeSection.id).map((q, idx) => (
+                                <button key={q.id} disabled={q.isAnswered} onClick={() => { setActiveQuestion(q); setTimer(30); setFeedback(null); setView('question'); speak(q.text); }} className={`aspect-square rounded-xl text-3xl font-bold flex items-center justify-center transition-all duration-200 shadow-sm border-2 ${q.isAnswered ? 'bg-gray-200 border-gray-300 text-gray-400' : 'bg-white border-gray-300 text-classic-dark hover:border-classic-gold hover:shadow-md'}`}>
+                                    {q.isAnswered ? <Icon name="CheckCircle" /> : <span className="font-amiri">{idx + 1}</span>}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {view === 'question' && activeQuestion && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+                        <div className="bg-white w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl flex flex-col border-4 border-classic-gold h-[85vh]">
+                            <div className="p-10 bg-classic-dark text-white text-center relative border-b-4 border-classic-gold flex-[0.4] flex flex-col items-center justify-center">
+                                <h3 className="text-4xl font-bold font-amiri leading-relaxed max-w-4xl">{activeQuestion.text}</h3>
+
+                                {appConfig.enableTimer && !feedback && (
+                                    <div className={`absolute top-6 right-6 text-2xl font-bold flex items-center gap-2 px-4 py-1 rounded bg-white/10 border ${timer < 10 ? 'text-red-300 border-red-300 animate-pulse' : 'text-classic-gold border-classic-gold'}`}>
+                                        <Icon name="Clock" /> {timer}
+                                    </div>
+                                )}
+
+                                <div className="absolute top-6 left-6 flex gap-2">
+                                    <button onClick={() => setView('intro')} className="w-10 h-10 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border border-white/30"><Icon name="Home" size="20" /></button>
+                                    <button onClick={() => setView('section')} className="w-10 h-10 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center text-white border border-white/30"><Icon name="X" size="24" /></button>
+                                </div>
+                            </div>
+
+                            <div className="p-8 bg-gray-50 flex-1 flex flex-col justify-center relative">
+                                {!feedback ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+                                        {activeQuestion.options.map((op, i) => (
+                                            <button key={i} onClick={() => handleAnswer(op)} className="group p-6 text-2xl font-bold rounded-xl border-2 border-gray-300 bg-white text-gray-700 hover:border-classic-dark hover:bg-emerald-50 hover:text-classic-dark transition-all shadow-sm flex items-center">
+                                                <span className="w-10 h-10 rounded bg-gray-100 border border-gray-300 flex items-center justify-center ml-4 text-sm font-bold group-hover:bg-classic-dark group-hover:text-white">{['أ', 'ب', 'ج', 'د'][i]}</span>
+                                                {op}
+                                            </button>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center animate-fade-in flex flex-col items-center justify-center h-full">
+                                        <div className={`w-24 h-24 rounded-full flex items-center justify-center text-5xl mb-4 border-4 shadow-lg ${feedback === 'correct' ? 'bg-emerald-100 text-emerald-700 border-emerald-500' : 'bg-red-100 text-red-700 border-red-500'}`}>
+                                            <Icon name={feedback === 'correct' ? 'CheckCircle' : 'XCircle'} />
+                                        </div>
+                                        <h2 className="text-4xl font-bold mb-2 font-amiri text-gray-800">{feedback === 'correct' ? appConfig.labels.correctTitle : appConfig.labels.wrongTitle}</h2>
+                                        <p className="text-xl text-gray-600 mb-8 font-bold">{feedback === 'correct' ? appConfig.labels.correctMessage : appConfig.labels.wrongMessage}</p>
+
+                                        <div className="flex gap-4">
+                                            {feedback === 'correct' ?
+                                                <button onClick={() => setView('prizes')} className="btn-gold px-12 py-4 rounded font-bold text-xl shadow-lg flex items-center gap-3"><Icon name="Gift" /> {appConfig.labels.goToPrizes}</button> :
+                                                <button onClick={() => setView('section')} className="btn-outline px-12 py-4 rounded font-bold text-xl">{appConfig.labels.backToQuestions}</button>
+                                            }
+                                        </div>
+
+                                        <button onClick={() => explainAnswerWithAI(activeQuestion.text, activeQuestion.answer)} disabled={isExplaining} className="mt-8 text-classic-dark hover:underline font-bold flex items-center gap-2 mx-auto">
+                                            {isExplaining ? <Icon name="Loader2" /> : <Icon name="Info" />} {feedback === 'correct' ? appConfig.labels.explainAI : appConfig.labels.knowAnswerAI}
+                                        </button>
+                                        {aiExplanation && <div className="mt-4 p-4 bg-white border border-gray-300 rounded text-lg text-gray-700 shadow-sm max-w-2xl">{aiExplanation}</div>}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {view === 'prizes' && (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-8 animate-fade-in">
+                        <h2 className="text-6xl font-bold mb-12 text-classic-dark font-amiri border-b-4 border-classic-gold px-12 pb-2">{appConfig.labels.choosePrize}</h2>
+                        <div className="grid grid-cols-4 gap-8 w-full max-w-6xl">
+                            {data.prizes.map((p, idx) => (
+                                <button key={p.id} disabled={p.isTaken} onClick={() => selectPrize(p.id)} className={`classic-card h-72 flex flex-col items-center justify-center transition-all duration-300 transform ${p.isTaken ? 'bg-gray-200 grayscale opacity-60 cursor-not-allowed' : 'hover:-translate-y-2 hover:shadow-xl hover:border-classic-gold'}`}>
+                                    {p.isTaken ? <Icon name="CheckCircle" size="64" className="text-gray-400" /> : (
+                                        <>
+                                            <div className="text-8xl text-classic-gold animate-bounce" style={{ animationDuration: '3s' }}><Icon name="Gift" /></div>
+                                            <div className="mt-6 text-classic-dark font-bold text-lg opacity-0 group-hover:opacity-100 transition">{appConfig.labels.clickToOpen}</div>
+                                        </>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {view === 'prizeReveal' && selectedPrize && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-4 animate-fade-in">
+                        <div className="classic-card p-16 text-center bg-white relative max-w-3xl w-full">
+                            <div className="relative mb-8">
+                                <img src={selectedPrize.image} className="w-64 h-64 mx-auto object-contain drop-shadow-xl animate-float" />
+                            </div>
+                            <h2 className="text-6xl font-bold text-classic-gold mb-4 font-amiri">{appConfig.labels.congrats}</h2>
+                            <p className="text-3xl text-gray-700 mb-8 font-bold">{appConfig.labels.youWon}</p>
+                            <div className="bg-classic-dark text-white px-12 py-4 rounded text-4xl font-bold mb-10 shadow-lg border-2 border-classic-gold font-amiri">{selectedPrize.name}</div>
+                            <button onClick={() => setView('section')} className="btn-gold px-16 py-4 rounded font-bold text-2xl shadow-lg">{appConfig.labels.continue}</button>
+                        </div>
+                    </div>
+                )}
+            </main>
+
+            {showPinModal.show && <PinModal isOpen={showPinModal.show} onClose={() => setShowPinModal({ show: false, action: null })} onSuccess={handlePinSuccess} labels={appConfig.labels} currentPin={appConfig.adminPin} />}
+            {showSettings && <SettingsModal appConfig={appConfig} setAppConfig={setAppConfig} data={data} setData={setData} onClose={() => setShowSettings(false)} onReset={performReset} apiKey={apiKey} />}
+            {confirmDialog.show && <ConfirmModal message={confirmDialog.message} onConfirm={confirmDialog.onConfirm} onCancel={() => setConfirmDialog({ show: false, message: '', onConfirm: null })} labels={appConfig.labels} />}
+            {updateStatus && <UpdateModal
+                status={updateStatus}
+                progress={downloadProgress}
+                onDownload={() => window.api?.downloadUpdate()}
+                onRestart={() => window.api?.quitAndInstall()}
+                onClose={() => setUpdateStatus(null)}
+                labels={appConfig.labels}
+            />}
+        </div>
+    );
+
+    return (
+        <>
+            <ClassicBackground config={appConfig} />
+            {appConfig.presentationMode ? (
+                <div className="fixed inset-0 flex items-center justify-center bg-black">
+                    <div style={{ width: 1920, height: 1080, transform: `scale(${scale})` }} className="relative overflow-hidden bg-white shadow-2xl border-4 border-gray-800">{content}</div>
+                </div>
+            ) : content}
+        </>
+    );
+};
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);

@@ -1,3 +1,9 @@
 node_modules
 firebase-config.js
-dist
+dist/*
+.parcel-cache
+!dist/index.html
+!dist/final-competetion.92f5eb32.css
+!dist/final-competetion.8aa7167d.js
+!dist/final-competetion.92f5eb32.css.map
+!dist/final-competetion.8aa7167d.js.map
