@@ -1,18 +1,17 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-    content: ["./index.html", "./*.js"],
+    content: [
+        "./**/*.{html,js}",   // Scan everything...
+        "!./node_modules/**"   // ...EXCEPT the node_modules folder
+    ],
     theme: {
         extend: {
-            fontFamily: {
-                cairo: ['Cairo', 'sans-serif'],
-                amiri: ['Amiri', 'serif'],
-            },
             colors: {
                 classic: {
-                    bg: '#fdfbf7',
-                    dark: '#1b4332',
-                    green: '#2d6a4f',
-                    gold: '#d4af37',
+                    bg: 'var(--theme-bg)',
+                    dark: 'var(--theme-primary)',
+                    green: 'var(--theme-primary-light)',
+                    gold: 'var(--theme-secondary)',
                     text: '#1f2937',
                     accent: '#b91c1c'
                 }
@@ -20,7 +19,7 @@ module.exports = {
             boxShadow: {
                 'classic': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                 'classic-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                'gold': '0 0 0 2px #d4af37',
+                'gold': '0 0 0 2px var(--theme-secondary)',
             },
             animation: {
                 'fade-in': 'fadeIn 0.5s ease-out forwards',
@@ -34,6 +33,9 @@ module.exports = {
                 }
             }
         }
+    },
+    corePlugins: {
+        preflight: false, // Disable Tailwind's default reset
     },
     plugins: [],
 }
