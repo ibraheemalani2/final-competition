@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { getQuestions, onQuestionsUpdate, addQuestion, updateQuestion, deleteQuestion, checkAdminPassword, changeAdminPassword } from './functions';
 const { useState, useEffect, useRef, useMemo } = React;
 
 // --- Constants: Fonts List ---
@@ -121,8 +122,8 @@ const PinModal = ({ isOpen, onClose, onSuccess, labels }) => {
         let isValid = false;
 
         try {
-            if (window.api && window.api.checkAdminPassword) {
-                isValid = await window.api.checkAdminPassword(pin);
+            if (window.api && checkAdminPassword) {
+                isValid = await checkAdminPassword(pin);
             } else {
                 console.error("API checkAdminPassword not available");
             }
@@ -265,12 +266,12 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
         // We don't overwrite isAnswered on edit unless intended.
         const qData = { text, type, options, answer, sectionId: sId };
 
-        if (window.api && window.api.addQuestion) {
+        if (window.api && addQuestion) {
             try {
                 if (editingId) {
-                    await window.api.updateQuestion(editingId, qData);
+                    await updateQuestion(editingId, qData);
                 } else {
-                    await window.api.addQuestion({ ...qData, isAnswered: false });
+                    await addQuestion({ ...qData, isAnswered: false });
                 }
             } catch (err) {
                 console.error("Error saving to Firestore:", err);
@@ -341,8 +342,8 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
     const handleChangePin = async () => {
         if (newPin.length >= 4) {
             try {
-                if (window.api && window.api.changeAdminPassword) {
-                    const success = await window.api.changeAdminPassword(newPin);
+                if (window.api && changeAdminPassword) {
+                    const success = await changeAdminPassword(newPin);
                     if (success) {
                         setAppConfig(prev => ({ ...prev, adminPin: newPin }));
                         setNewPin("");
@@ -485,8 +486,8 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
                                             <button onClick={() => { setEditingId(q.id); setQuestionForm({ ...q, op1: q.options[0], op2: q.options[1], op3: q.options[2], op4: q.options[3] }) }} className="text-blue-500"><Icon name="Edit3" /></button>
                                             <button onClick={() => {
                                                 if (confirm('حذف السؤال؟')) {
-                                                    if (window.api && window.api.deleteQuestion) {
-                                                        window.api.deleteQuestion(q.id);
+                                                    if (window.api && deleteQuestion) {
+                                                        deleteQuestion(q.id);
                                                     } else {
                                                         setData(d => ({ ...d, questions: d.questions.filter(x => x.id !== q.id) }));
                                                     }
@@ -757,8 +758,8 @@ const App = () => {
     // --- FIREBASE INTEGRATION ---
     useEffect(() => {
         // Initial Load
-        if (window.api && window.api.getQuestions) {
-            window.api.getQuestions().then(dbQuestions => {
+        if (window.api && getQuestions) {
+            getQuestions().then(dbQuestions => {
                 console.log("Loaded questions from Firestore:", dbQuestions);
                 if (dbQuestions && dbQuestions.length > 0) {
                     setData(prev => {
@@ -777,7 +778,7 @@ const App = () => {
             }).catch(err => console.error("Failed to load questions:", err));
 
             // Real-time Listeners
-            window.api.onQuestionsUpdate((updatedQuestions) => {
+            onQuestionsUpdate((updatedQuestions) => {
                 console.log("Realtime update:", updatedQuestions);
                 setData(prev => ({ ...prev, questions: updatedQuestions }));
             });
