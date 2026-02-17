@@ -1,6 +1,6 @@
 {
   "name": "final-competetion",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "An interactive competition application",
   "main": "main.js",
   "targets": {
@@ -15,6 +15,17 @@
   },
   "build": {
     "appId": "com.example.final-competetion",
+    "files": [
+      "dist/index.html",
+      "main.js",
+      "preload.js",
+      "dist/*.css",
+      "dist/*.js",
+      "dist/*.svg",
+      "libs",
+      "dist/*.woff2",
+      "dist/*.ttf"
+    ],
     "publish": [
       {
         "provider": "github",

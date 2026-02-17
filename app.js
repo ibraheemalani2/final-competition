@@ -61,12 +61,7 @@ const INITIAL_DATA = {
         { id: 101, sectionId: 1, text: 'كم عدد سور القرآن الكريم؟', type: 'choice', options: ['110', '114', '120', '99'], answer: '114', isAnswered: false },
         { id: 102, sectionId: 1, text: 'ما هي أعظم سورة في القرآن الكريم؟', type: 'choice', options: ['سورة البقرة', 'سورة الكهف', 'سورة الفاتحة', 'سورة الإخلاص'], answer: 'سورة الفاتحة', isAnswered: false },
     ],
-    prizes: [
-        { id: 1, name: 'عطر فاخر', image: 'https://cdn-icons-png.flaticon.com/512/2829/2829929.png', isTaken: false },
-        { id: 2, name: 'مسبحة إلكترونية', image: 'https://cdn-icons-png.flaticon.com/512/4393/4393963.png', isTaken: false },
-        { id: 3, name: 'مصحف مذهب', image: 'https://cdn-icons-png.flaticon.com/512/3023/3023573.png', isTaken: false },
-        { id: 4, name: 'بطاقة شراء', image: 'https://cdn-icons-png.flaticon.com/512/10530/10530869.png', isTaken: false },
-    ]
+    prizes: []
 };
 
 // --- Visual Components ---
