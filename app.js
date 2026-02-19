@@ -274,16 +274,13 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
             ? { id: editingId, title: sectionForm.title, icon: data.sections.find(s => s.id === editingId)?.icon || 'Star', color: sectionForm.color }
             : { id: Date.now(), title: sectionForm.title, icon: 'Star', color: sectionForm.color };
 
-        // Save to Firestore
+        // Save to Firestore — real-time listener will update local state
         try {
             await saveSectionToFirebase(sectionData);
         } catch (err) {
             console.error('Error saving section to Firebase:', err);
         }
 
-        // Also update local state
-        if (editingId) setData(prev => ({ ...prev, sections: prev.sections.map(s => s.id === editingId ? { ...s, title: sectionForm.title, color: sectionForm.color } : s) }));
-        else setData(prev => ({ ...prev, sections: [...prev.sections, sectionData] }));
         setEditingId(null);
         setSectionForm({ title: '', color: '#1b4332' });
     };
@@ -345,16 +342,13 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
                 ? { id: editingId, name: prizeForm.name, image: imageUrl || data.prizes.find(p => p.id === editingId)?.image, isTaken: data.prizes.find(p => p.id === editingId)?.isTaken || false }
                 : { id: prizeId, name: prizeForm.name, image: imageUrl || 'https://cdn-icons-png.flaticon.com/512/3023/3023573.png', isTaken: false };
 
-            // Save to Firestore
+            // Save to Firestore — real-time listener will update local state
             try {
                 await savePrizeToFirebase(prizeData);
             } catch (err) {
                 console.error('Error saving prize to Firebase:', err);
             }
 
-            // Update local state
-            if (editingId) setData(prev => ({ ...prev, prizes: prev.prizes.map(p => p.id === editingId ? { ...p, name: prizeForm.name, image: imageUrl || p.image } : p) }));
-            else setData(prev => ({ ...prev, prizes: [...prev.prizes, prizeData] }));
             setEditingId(null);
             setPrizeForm({ name: '' });
         };
@@ -392,17 +386,13 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
                 logo: logoUrl
             };
 
-            // Save to Firestore
+            // Save to Firestore — real-time listener will update local state
             try {
                 await saveSponsorToFirebase(newSponsor);
             } catch (err) {
                 console.error('Error saving sponsor to Firebase:', err);
             }
 
-            setAppConfig(prev => ({
-                ...prev,
-                sponsors: [...(prev.sponsors || []), newSponsor]
-            }));
             setSponsorForm({ name: '' });
             if (sponsorFileInputRef.current) sponsorFileInputRef.current.value = "";
         };
@@ -417,16 +407,12 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
     };
 
     const removeSponsor = async (id) => {
-        // Delete from Firestore
+        // Delete from Firestore — real-time listener will update local state
         try {
             await deleteSponsorFromFirebase(id);
         } catch (err) {
             console.error('Error deleting sponsor from Firebase:', err);
         }
-        setAppConfig(prev => ({
-            ...prev,
-            sponsors: (prev.sponsors || []).filter(s => s.id !== id)
-        }));
     };
 
     const handleChangePin = async () => {
@@ -548,7 +534,7 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
                                 <input type="color" value={sectionForm.color} onChange={e => setSectionForm({ ...sectionForm, color: e.target.value })} className="h-10 w-10 p-0 border-0 cursor-pointer" />
                                 <button className="btn-classic px-6 rounded font-bold">حفظ</button>
                             </form>
-                            {data.sections.map(s => <div key={s.id} className="p-3 bg-white border rounded flex justify-between items-center"><div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full" style={{ backgroundColor: s.color }}></span><span className="font-bold">{s.title}</span></div><div className="flex gap-2"><button onClick={() => { setEditingId(s.id); setSectionForm({ title: s.title, color: s.color }) }} className="text-blue-600"><Icon name="Edit3" /></button><button onClick={async () => { if (confirm('حذف؟')) { try { await deleteSectionFromFirebase(s.id); } catch (err) { console.error(err); } setData(d => ({ ...d, sections: d.sections.filter(x => x.id !== s.id) })); } }} className="text-red-600"><Icon name="Trash2" /></button></div></div>)}
+                            {data.sections.map(s => <div key={s.id} className="p-3 bg-white border rounded flex justify-between items-center"><div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full" style={{ backgroundColor: s.color }}></span><span className="font-bold">{s.title}</span></div><div className="flex gap-2"><button onClick={() => { setEditingId(s.id); setSectionForm({ title: s.title, color: s.color }) }} className="text-blue-600"><Icon name="Edit3" /></button><button onClick={async () => { if (confirm('حذف؟')) { try { await deleteSectionFromFirebase(s.id); } catch (err) { console.error(err); } } }} className="text-red-600"><Icon name="Trash2" /></button></div></div>)}
                         </div>
                     )}
 
@@ -601,7 +587,7 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
                                 {data.prizes.map(p => (
                                     <div key={p.id} className="p-2 border rounded bg-white flex items-center justify-between">
                                         <div className="flex items-center gap-2"><img src={p.image} className="w-8 h-8 object-contain" /><span>{p.name}</span></div>
-                                        <button onClick={async () => { try { await deletePrizeFromFirebase(p.id); } catch (err) { console.error(err); } setData(d => ({ ...d, prizes: d.prizes.filter(x => x.id !== p.id) })); }} className="text-red-500"><Icon name="Trash2" /></button>
+                                        <button onClick={async () => { try { await deletePrizeFromFirebase(p.id); } catch (err) { console.error(err); } }} className="text-red-500"><Icon name="Trash2" /></button>
                                     </div>
                                 ))}
                             </div>
