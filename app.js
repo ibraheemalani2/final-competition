@@ -1,7 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { getQuestions, onQuestionsUpdate, addQuestion, updateQuestion, deleteQuestion, checkAdminPassword, changeAdminPassword } from './functions';
-const { useState, useEffect, useRef, useMemo } = React;
+import {
+    getQuestions, onQuestionsUpdate, addQuestion, updateQuestion, deleteQuestion,
+    checkAdminPassword, changeAdminPassword,
+    uploadImage, deleteImage,
+    saveAppConfig, getAppConfig, onAppConfigUpdate,
+    getSections, saveSectionToFirebase, deleteSectionFromFirebase, onSectionsUpdate,
+    getPrizes, savePrizeToFirebase, deletePrizeFromFirebase, onPrizesUpdate,
+    getSponsors, saveSponsorToFirebase, deleteSponsorFromFirebase, onSponsorsUpdate
+} from './functions';
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
 // --- Constants: Fonts List ---
 const AVAILABLE_FONTS = [
@@ -192,21 +200,40 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onloadend = () => {
-                setAppConfig(prev => {
-                    if (key === 'customBgImage') return { ...prev, bgMode: 'image', customBgImage: reader.result };
-                    return { ...prev, layoutImages: { ...prev.layoutImages, [key]: reader.result } };
-                });
+            reader.onloadend = async () => {
+                const base64 = reader.result;
+                try {
+                    // Upload to Firebase Storage
+                    const storagePath = key === 'customBgImage' ? `images/bg/background_${Date.now()}` : `images/layout/${key}_${Date.now()}`;
+                    const downloadURL = await uploadImage(storagePath, base64);
+                    setAppConfig(prev => {
+                        if (key === 'customBgImage') return { ...prev, bgMode: 'image', customBgImage: downloadURL, _customBgImagePath: storagePath };
+                        return { ...prev, layoutImages: { ...prev.layoutImages, [key]: downloadURL }, _layoutImagePaths: { ...(prev._layoutImagePaths || {}), [key]: storagePath } };
+                    });
+                } catch (err) {
+                    console.error('Failed to upload image, using local base64:', err);
+                    setAppConfig(prev => {
+                        if (key === 'customBgImage') return { ...prev, bgMode: 'image', customBgImage: base64 };
+                        return { ...prev, layoutImages: { ...prev.layoutImages, [key]: base64 } };
+                    });
+                }
             };
             reader.readAsDataURL(file);
         }
     };
 
-    const removeConfigImage = (key) => {
+    const removeConfigImage = async (key) => {
+        // Delete from Firebase Storage if path exists
         setAppConfig(prev => {
+            const storagePath = prev._layoutImagePaths?.[key];
+            if (storagePath) {
+                deleteImage(storagePath).catch(err => console.error('Error deleting layout image:', err));
+            }
             const newLayout = { ...prev.layoutImages };
             delete newLayout[key];
-            return { ...prev, layoutImages: newLayout };
+            const newPaths = { ...(prev._layoutImagePaths || {}) };
+            delete newPaths[key];
+            return { ...prev, layoutImages: newLayout, _layoutImagePaths: newPaths };
         });
     };
 
@@ -241,10 +268,22 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
         }
     };
 
-    const saveSection = (e) => {
+    const saveSection = async (e) => {
         e.preventDefault();
+        const sectionData = editingId
+            ? { id: editingId, title: sectionForm.title, icon: data.sections.find(s => s.id === editingId)?.icon || 'Star', color: sectionForm.color }
+            : { id: Date.now(), title: sectionForm.title, icon: 'Star', color: sectionForm.color };
+
+        // Save to Firestore
+        try {
+            await saveSectionToFirebase(sectionData);
+        } catch (err) {
+            console.error('Error saving section to Firebase:', err);
+        }
+
+        // Also update local state
         if (editingId) setData(prev => ({ ...prev, sections: prev.sections.map(s => s.id === editingId ? { ...s, title: sectionForm.title, color: sectionForm.color } : s) }));
-        else setData(prev => ({ ...prev, sections: [...prev.sections, { id: Date.now(), title: sectionForm.title, icon: 'Star', color: sectionForm.color }] }));
+        else setData(prev => ({ ...prev, sections: [...prev.sections, sectionData] }));
         setEditingId(null);
         setSectionForm({ title: '', color: '#1b4332' });
     };
@@ -283,20 +322,48 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
         setQuestionForm({ sectionId: '', text: '', type: 'choice', op1: '', op2: '', op3: '', op4: '', answer: '' });
     };
 
-    const savePrize = (e) => {
+    const savePrize = async (e) => {
         e.preventDefault();
         const file = prizeFileInputRef.current?.files[0];
-        const save = (img) => {
-            if (editingId) setData(prev => ({ ...prev, prizes: prev.prizes.map(p => p.id === editingId ? { ...p, name: prizeForm.name, image: img || p.image } : p) }));
-            else setData(prev => ({ ...prev, prizes: [...prev.prizes, { id: Date.now(), name: prizeForm.name, image: img || 'https://cdn-icons-png.flaticon.com/512/3023/3023573.png', isTaken: false }] }));
+
+        const save = async (img) => {
+            const prizeId = editingId || Date.now();
+            let imageUrl = img;
+
+            // Upload image to Firebase Storage if it's base64
+            if (img && img.startsWith('data:')) {
+                try {
+                    const storagePath = `images/prizes/prize_${prizeId}_${Date.now()}`;
+                    imageUrl = await uploadImage(storagePath, img);
+                } catch (err) {
+                    console.error('Failed to upload prize image:', err);
+                    imageUrl = img; // fallback to base64
+                }
+            }
+
+            const prizeData = editingId
+                ? { id: editingId, name: prizeForm.name, image: imageUrl || data.prizes.find(p => p.id === editingId)?.image, isTaken: data.prizes.find(p => p.id === editingId)?.isTaken || false }
+                : { id: prizeId, name: prizeForm.name, image: imageUrl || 'https://cdn-icons-png.flaticon.com/512/3023/3023573.png', isTaken: false };
+
+            // Save to Firestore
+            try {
+                await savePrizeToFirebase(prizeData);
+            } catch (err) {
+                console.error('Error saving prize to Firebase:', err);
+            }
+
+            // Update local state
+            if (editingId) setData(prev => ({ ...prev, prizes: prev.prizes.map(p => p.id === editingId ? { ...p, name: prizeForm.name, image: imageUrl || p.image } : p) }));
+            else setData(prev => ({ ...prev, prizes: [...prev.prizes, prizeData] }));
             setEditingId(null);
             setPrizeForm({ name: '' });
         };
+
         if (file) {
             const r = new FileReader();
             r.onloadend = () => save(r.result);
             r.readAsDataURL(file);
-        } else save(null);
+        } else await save(null);
     };
 
     const addSponsor = (e) => {
@@ -304,12 +371,34 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
         const file = sponsorFileInputRef.current?.files[0];
         if (!file && !sponsorForm.name) return;
 
-        const saveSponsor = (img) => {
+        const saveSponsor = async (img) => {
+            const sponsorId = Date.now();
+            let logoUrl = img;
+
+            // Upload logo to Firebase Storage if it's base64
+            if (img && img.startsWith('data:')) {
+                try {
+                    const storagePath = `images/sponsors/sponsor_${sponsorId}_${Date.now()}`;
+                    logoUrl = await uploadImage(storagePath, img);
+                } catch (err) {
+                    console.error('Failed to upload sponsor logo:', err);
+                    logoUrl = img; // fallback
+                }
+            }
+
             const newSponsor = {
-                id: Date.now(),
+                id: sponsorId,
                 name: sponsorForm.name,
-                logo: img
+                logo: logoUrl
             };
+
+            // Save to Firestore
+            try {
+                await saveSponsorToFirebase(newSponsor);
+            } catch (err) {
+                console.error('Error saving sponsor to Firebase:', err);
+            }
+
             setAppConfig(prev => ({
                 ...prev,
                 sponsors: [...(prev.sponsors || []), newSponsor]
@@ -327,7 +416,13 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
         }
     };
 
-    const removeSponsor = (id) => {
+    const removeSponsor = async (id) => {
+        // Delete from Firestore
+        try {
+            await deleteSponsorFromFirebase(id);
+        } catch (err) {
+            console.error('Error deleting sponsor from Firebase:', err);
+        }
         setAppConfig(prev => ({
             ...prev,
             sponsors: (prev.sponsors || []).filter(s => s.id !== id)
@@ -453,7 +548,7 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
                                 <input type="color" value={sectionForm.color} onChange={e => setSectionForm({ ...sectionForm, color: e.target.value })} className="h-10 w-10 p-0 border-0 cursor-pointer" />
                                 <button className="btn-classic px-6 rounded font-bold">حفظ</button>
                             </form>
-                            {data.sections.map(s => <div key={s.id} className="p-3 bg-white border rounded flex justify-between items-center"><div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full" style={{ backgroundColor: s.color }}></span><span className="font-bold">{s.title}</span></div><div className="flex gap-2"><button onClick={() => { setEditingId(s.id); setSectionForm({ title: s.title, color: s.color }) }} className="text-blue-600"><Icon name="Edit3" /></button><button onClick={() => { if (confirm('حذف؟')) setData(d => ({ ...d, sections: d.sections.filter(x => x.id !== s.id) })) }} className="text-red-600"><Icon name="Trash2" /></button></div></div>)}
+                            {data.sections.map(s => <div key={s.id} className="p-3 bg-white border rounded flex justify-between items-center"><div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full" style={{ backgroundColor: s.color }}></span><span className="font-bold">{s.title}</span></div><div className="flex gap-2"><button onClick={() => { setEditingId(s.id); setSectionForm({ title: s.title, color: s.color }) }} className="text-blue-600"><Icon name="Edit3" /></button><button onClick={async () => { if (confirm('حذف؟')) { try { await deleteSectionFromFirebase(s.id); } catch (err) { console.error(err); } setData(d => ({ ...d, sections: d.sections.filter(x => x.id !== s.id) })); } }} className="text-red-600"><Icon name="Trash2" /></button></div></div>)}
                         </div>
                     )}
 
@@ -506,7 +601,7 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
                                 {data.prizes.map(p => (
                                     <div key={p.id} className="p-2 border rounded bg-white flex items-center justify-between">
                                         <div className="flex items-center gap-2"><img src={p.image} className="w-8 h-8 object-contain" /><span>{p.name}</span></div>
-                                        <button onClick={() => setData(d => ({ ...d, prizes: d.prizes.filter(x => x.id !== p.id) }))} className="text-red-500"><Icon name="Trash2" /></button>
+                                        <button onClick={async () => { try { await deletePrizeFromFirebase(p.id); } catch (err) { console.error(err); } setData(d => ({ ...d, prizes: d.prizes.filter(x => x.id !== p.id) })); }} className="text-red-500"><Icon name="Trash2" /></button>
                                     </div>
                                 ))}
                             </div>
@@ -748,42 +843,122 @@ const App = () => {
     // Initialize
     useEffect(() => { if (appConfig.enableIntro && !introShown) setView('intro'); }, [appConfig.enableIntro]);
 
+    // Load from localStorage first as cache, then Firebase overwrites
     useEffect(() => { const d = localStorage.getItem('qDataClassic'), c = localStorage.getItem('qConfigClassic'); if (d) setData(JSON.parse(d)); if (c) setAppConfig(JSON.parse(c)); }, []);
+
+    // --- Ref to prevent saving config that was just loaded from Firebase ---
+    const isLoadingFromFirebase = useRef(true);
+    const configSaveTimer = useRef(null);
 
     // --- FIREBASE INTEGRATION ---
     useEffect(() => {
-        // Initial Load
-        if (window.api && getQuestions) {
-            getQuestions().then(dbQuestions => {
-                console.log("Loaded questions from Firestore:", dbQuestions);
-                if (dbQuestions && dbQuestions.length > 0) {
-                    setData(prev => {
-                        // Merge logic: You might want to replace entirely or merge
-                        // Here we replace the questions array with the one from DB
-                        // But we need to make sure we don't lose 'isAnswered' status if it was persisted locally.
-                        // A simple approach is to trust Firestore as the Single Source of Truth for *questions content*,
-                        // but maybe keep local state for *isAnswered*?
-
-                        // For now, let's just load them. If you need sync 'isAnswered' state across devices, 
-                        // that needs writing back to Firestore.
-                        // Assuming we just want to LOAD questions:
-                        return { ...prev, questions: dbQuestions };
-                    });
-                }
-            }).catch(err => console.error("Failed to load questions:", err));
-
-            // Real-time Listeners
-            onQuestionsUpdate((updatedQuestions) => {
-                console.log("Realtime update:", updatedQuestions);
-                setData(prev => ({ ...prev, questions: updatedQuestions }));
-            });
-        } else {
-            console.error("Window API is not defined. Preload script might have failed.");
+        if (!getQuestions) {
+            console.error("Firebase functions not available.");
+            isLoadingFromFirebase.current = false;
+            return;
         }
+
+        // Load questions
+        getQuestions().then(dbQuestions => {
+            console.log("Loaded questions from Firestore:", dbQuestions);
+            if (dbQuestions && dbQuestions.length > 0) {
+                setData(prev => ({ ...prev, questions: dbQuestions }));
+            }
+        }).catch(err => console.error("Failed to load questions:", err));
+
+        // Load appConfig
+        getAppConfig().then(config => {
+            if (config) {
+                console.log("Loaded appConfig from Firestore:", config);
+                setAppConfig(prev => ({ ...prev, ...config }));
+            }
+        }).catch(err => console.error("Failed to load appConfig:", err));
+
+        // Load sections
+        getSections().then(sections => {
+            if (sections && sections.length > 0) {
+                console.log("Loaded sections from Firestore:", sections);
+                // Restore original numeric IDs if stored
+                const mapped = sections.map(s => ({ ...s, id: s.originalId || s.id }));
+                setData(prev => ({ ...prev, sections: mapped }));
+            }
+        }).catch(err => console.error("Failed to load sections:", err));
+
+        // Load prizes
+        getPrizes().then(prizes => {
+            if (prizes && prizes.length > 0) {
+                console.log("Loaded prizes from Firestore:", prizes);
+                const mapped = prizes.map(p => ({ ...p, id: p.originalId || p.id }));
+                setData(prev => ({ ...prev, prizes: mapped }));
+            }
+        }).catch(err => console.error("Failed to load prizes:", err));
+
+        // Load sponsors
+        getSponsors().then(sponsors => {
+            if (sponsors && sponsors.length > 0) {
+                console.log("Loaded sponsors from Firestore:", sponsors);
+                const mapped = sponsors.map(s => ({ ...s, id: s.originalId || s.id }));
+                setAppConfig(prev => ({ ...prev, sponsors: mapped }));
+            }
+        }).catch(err => console.error("Failed to load sponsors:", err));
+
+        // Real-time Listeners
+        onQuestionsUpdate((updatedQuestions) => {
+            console.log("Realtime questions update:", updatedQuestions.length);
+            setData(prev => ({ ...prev, questions: updatedQuestions }));
+        });
+
+        onAppConfigUpdate((config) => {
+            console.log("Realtime appConfig update");
+            isLoadingFromFirebase.current = true;
+            setAppConfig(prev => ({ ...prev, ...config }));
+            // Reset the flag after a short delay to allow the state to settle
+            setTimeout(() => { isLoadingFromFirebase.current = false; }, 500);
+        });
+
+        onSectionsUpdate((sections) => {
+            console.log("Realtime sections update:", sections.length);
+            const mapped = sections.map(s => ({ ...s, id: s.originalId || s.id }));
+            setData(prev => ({ ...prev, sections: mapped }));
+        });
+
+        onPrizesUpdate((prizes) => {
+            console.log("Realtime prizes update:", prizes.length);
+            const mapped = prizes.map(p => ({ ...p, id: p.originalId || p.id }));
+            setData(prev => ({ ...prev, prizes: mapped }));
+        });
+
+        onSponsorsUpdate((sponsors) => {
+            console.log("Realtime sponsors update:", sponsors.length);
+            const mapped = sponsors.map(s => ({ ...s, id: s.originalId || s.id }));
+            setAppConfig(prev => ({ ...prev, sponsors: mapped }));
+        });
+
+        // Allow saving after initial load settles
+        setTimeout(() => { isLoadingFromFirebase.current = false; }, 2000);
     }, []);
 
+    // Save to localStorage (cache)
     useEffect(() => { localStorage.setItem('qDataClassic', JSON.stringify(data)); }, [data]);
     useEffect(() => { localStorage.setItem('qConfigClassic', JSON.stringify(appConfig)); }, [appConfig]);
+
+    // Debounced save of appConfig to Firestore (1s debounce)
+    useEffect(() => {
+        if (isLoadingFromFirebase.current) return;
+
+        if (configSaveTimer.current) clearTimeout(configSaveTimer.current);
+        configSaveTimer.current = setTimeout(() => {
+            // Build a clean config object for Firestore (exclude sponsors, they have their own collection)
+            const configForFirestore = { ...appConfig };
+            delete configForFirestore.sponsors; // sponsors are in their own collection
+            // Remove any large base64 data that shouldn't be in Firestore
+            // (images should already be URLs if uploaded to Storage)
+            console.log("Debounced save appConfig to Firestore");
+            saveAppConfig(configForFirestore);
+        }, 1000);
+
+        return () => { if (configSaveTimer.current) clearTimeout(configSaveTimer.current); };
+    }, [appConfig]);
 
     // Dynamic Styling Injection
     useEffect(() => {
