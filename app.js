@@ -1090,37 +1090,34 @@ const App = () => {
     // --- Views Content ---
     const IntroView = () => (
         <div className="flex flex-col items-center justify-center h-full w-full animate-fade-in relative z-10 p-12 text-center">
-            <div className="classic-card p-12 bg-white max-w-5xl w-full flex flex-col items-center shadow-2xl relative overflow-hidden">
 
-                <h1 className="text-7xl font-bold text-classic-dark mb-4 font-amiri border-b-2 border-classic-gold pb-4 px-8 mt-4">{appConfig.labels.appTitle}</h1>
-                <p className="text-2xl text-gray-600 font-bold mb-10">{appConfig.labels.appSubtitle}</p>
-
-                {/* Multiple Sponsors Grid */}
-                {appConfig.sponsors && appConfig.sponsors.length > 0 && (
-                    <div className="mb-10 w-full">
-                        <div className="text-gray-500 font-bold mb-4 text-sm uppercase tracking-widest">{appConfig.labels.sponsoredBy}</div>
-                        <div className="flex flex-wrap items-center justify-center gap-8">
-                            {appConfig.sponsors.map(sponsor => (
-                                <div key={sponsor.id} className="flex flex-col items-center gap-2 transition-transform hover:scale-110">
-                                    {sponsor.logo && (
-                                        <img
-                                            src={sponsor.logo}
-                                            className="object-contain drop-shadow-md"
-                                            style={{ height: `${6 * (appConfig.sponsorLogoScale || 1)}rem` }}
-                                            alt={sponsor.name}
-                                        />
-                                    )}
-                                    {sponsor.name && <span className="text-classic-dark font-bold text-lg">{sponsor.name}</span>}
-                                </div>
-                            ))}
-                        </div>
+            {/* Sponsors Row - above the title */}
+            {appConfig.sponsors && appConfig.sponsors.length > 0 && (
+                <div className="w-full max-w-5xl mb-8">
+                    <div className={`flex flex-wrap items-center ${appConfig.sponsors.length === 1 ? 'justify-center' : 'justify-between'} gap-4`}>
+                        {appConfig.sponsors.map(sponsor => (
+                            <div key={sponsor.id} className="flex flex-col items-center gap-2 transition-transform hover:scale-110">
+                                {sponsor.logo && (
+                                    <img
+                                        src={sponsor.logo}
+                                        className="object-contain drop-shadow-md"
+                                        style={{ height: `${6 * (appConfig.sponsorLogoScale || 1)}rem` }}
+                                        alt={sponsor.name}
+                                    />
+                                )}
+                                {sponsor.name && <span className="text-classic-dark font-bold text-lg">{sponsor.name}</span>}
+                            </div>
+                        ))}
                     </div>
-                )}
+                </div>
+            )}
 
-                <button onClick={() => { setIntroShown(true); setView('home') }} className="btn-classic text-2xl font-bold py-4 px-16 rounded-full shadow-lg mt-auto">
-                    {appConfig.labels.startQuiz}
-                </button>
-            </div>
+            <h1 className="text-7xl font-bold text-classic-dark mb-4 font-amiri border-b-2 border-classic-gold pb-4 px-8 mt-4">{appConfig.labels.appTitle}</h1>
+            <p className="text-2xl text-gray-600 font-bold mb-10">{appConfig.labels.appSubtitle}</p>
+
+            <button onClick={() => { setIntroShown(true); setView('home') }} className="btn-classic text-2xl font-bold py-4 px-16 rounded-full shadow-lg mt-auto">
+                {appConfig.labels.startQuiz}
+            </button>
         </div>
     );
 
