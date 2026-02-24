@@ -767,6 +767,44 @@ const ConfirmModal = ({ message, onConfirm, onCancel, labels }) => (
     </div>
 );
 
+// --- Question Grid (dynamic square sizing) ---
+const QuestionGrid = ({ cols, rows, gap, fontSize, children }) => {
+    const containerRef = useRef(null);
+    const [buttonSize, setButtonSize] = useState(0);
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const compute = () => {
+            const w = el.clientWidth;
+            const h = el.clientHeight;
+            const maxW = (w - gap * (cols - 1)) / cols;
+            const maxH = (h - gap * (rows - 1)) / rows;
+            setButtonSize(Math.floor(Math.min(maxW, maxH)));
+        };
+        compute();
+        const ro = new ResizeObserver(compute);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [cols, rows, gap]);
+
+    return (
+        <div ref={containerRef} className="flex-1 p-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, overflow: 'hidden' }}>
+            {buttonSize > 0 && (
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: `repeat(${cols}, ${buttonSize}px)`,
+                    gridTemplateRows: `repeat(${rows}, ${buttonSize}px)`,
+                    gap: `${gap}px`,
+                    fontSize,
+                }}>
+                    {children}
+                </div>
+            )}
+        </div>
+    );
+};
+
 // --- Main Application ---
 const App = () => {
     const [data, setData] = useState(INITIAL_DATA);
@@ -1231,13 +1269,24 @@ const App = () => {
                                 <span>{appConfig.labels.generateAI}</span>
                             </button>
                         </div>
-                        <div className="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-6 flex-1 content-start overflow-y-auto custom-scrollbar p-2">
-                            {data.questions.filter(q => q.sectionId === activeSection.id).map((q, idx) => (
-                                <button key={q.id} disabled={q.isAnswered} onClick={() => { setActiveQuestion(q); setTimer(30); setFeedback(null); setView('question'); speak(q.text); }} className={`aspect-square rounded-xl text-3xl font-bold flex items-center justify-center transition-all duration-200 shadow-sm border-2 ${q.isAnswered ? 'bg-gray-200 border-gray-300 text-gray-400' : 'bg-white border-gray-300 text-classic-dark hover:border-classic-gold hover:shadow-md'}`}>
-                                    {q.isAnswered ? <Icon name="CheckCircle" /> : <span className="font-amiri">{idx + 1}</span>}
-                                </button>
-                            ))}
-                        </div>
+                        {(() => {
+                            const sectionQuestions = data.questions.filter(q => q.sectionId === activeSection.id);
+                            const count = sectionQuestions.length;
+                            const rows = Math.max(1, Math.ceil(count / 4));
+                            const cols = Math.max(1, Math.ceil(count / rows));
+                            const gap = count <= 4 ? 24 : 16;
+                            const fontSize = count <= 1 ? '5rem' : count <= 4 ? '3rem' : count <= 9 ? '2.25rem' : count <= 16 ? '1.75rem' : '1.5rem';
+
+                            return (
+                                <QuestionGrid cols={cols} rows={rows} gap={gap} fontSize={fontSize}>
+                                    {sectionQuestions.map((q, idx) => (
+                                        <button key={q.id} disabled={q.isAnswered} onClick={() => { setActiveQuestion(q); setTimer(30); setFeedback(null); setView('question'); speak(q.text); }} className={`rounded-xl font-bold flex items-center justify-center transition-all duration-200 shadow-sm border-2 ${q.isAnswered ? 'bg-gray-200 border-gray-300 text-gray-400' : 'bg-white border-gray-300 text-classic-dark hover:border-classic-gold hover:shadow-md'}`}>
+                                            {q.isAnswered ? <Icon name="CheckCircle" /> : <span className="font-amiri">{idx + 1}</span>}
+                                        </button>
+                                    ))}
+                                </QuestionGrid>
+                            );
+                        })()}
                     </div>
                 )}
 
