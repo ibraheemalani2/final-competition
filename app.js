@@ -773,7 +773,7 @@ const ConfirmModal = ({ message, onConfirm, onCancel, labels }) => (
 );
 
 // --- Question Grid (dynamic square sizing) ---
-const QuestionGrid = ({ cols, rows, gap, fontSize, children }) => {
+const QuestionGrid = ({ cols, rows, gap, fontSize, centerLastRow, children }) => {
     const containerRef = useRef(null);
     const [buttonSize, setButtonSize] = useState(0);
 
@@ -796,14 +796,23 @@ const QuestionGrid = ({ cols, rows, gap, fontSize, children }) => {
     return (
         <div ref={containerRef} className="flex-1 p-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, overflow: 'hidden' }}>
             {buttonSize > 0 && (
-                <div style={{
+                <div style={centerLastRow ? {
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    gap: `${gap}px`,
+                    fontSize,
+                    width: `${cols * buttonSize + (cols - 1) * gap}px`,
+                } : {
                     display: 'grid',
                     gridTemplateColumns: `repeat(${cols}, ${buttonSize}px)`,
                     gridTemplateRows: `repeat(${rows}, ${buttonSize}px)`,
                     gap: `${gap}px`,
                     fontSize,
                 }}>
-                    {children}
+                    {React.Children.map(children, child => centerLastRow ?
+                        <div style={{ width: buttonSize, height: buttonSize }}>{React.cloneElement(child, { style: { ...child.props.style, width: '100%', height: '100%' } })}</div> : child
+                    )}
                 </div>
             )}
         </div>
@@ -1350,20 +1359,37 @@ const App = () => {
                 )}
 
                 {view === 'prizes' && (
-                    <div className="w-full h-full flex flex-col items-center justify-center p-8 animate-fade-in">
-                        <h2 className="text-6xl font-bold mb-12 text-classic-dark font-amiri border-b-4 border-classic-gold px-12 pb-2">{appConfig.labels.choosePrize}</h2>
-                        <div className="grid grid-cols-4 gap-8 w-full max-w-6xl">
-                            {data.prizes.map((p, idx) => (
-                                <button key={p.id} disabled={p.isTaken} onClick={() => selectPrize(p.id)} className={`classic-card h-72 flex flex-col items-center justify-center transition-all duration-300 transform ${p.isTaken ? 'bg-gray-200 grayscale opacity-60 cursor-not-allowed' : 'hover:-translate-y-2 hover:shadow-xl hover:border-classic-gold'}`}>
-                                    {p.isTaken ? <Icon name="CheckCircle" size="64" className="text-gray-400" /> : (
-                                        <>
-                                            <div className="text-8xl text-classic-gold animate-bounce" style={{ animationDuration: '3s' }}><Icon name="Gift" /></div>
-                                            <div className="mt-6 text-classic-dark font-bold text-lg opacity-0 group-hover:opacity-100 transition">{appConfig.labels.clickToOpen}</div>
-                                        </>
-                                    )}
-                                </button>
-                            ))}
+                    <div className="w-full max-w-7xl p-8 h-full flex flex-col animate-fade-in">
+                        <div className="flex justify-center items-center mb-8">
+                            <h2 className="text-6xl font-bold text-classic-dark font-amiri border-b-4 border-classic-gold px-12 pb-2">{appConfig.labels.choosePrize}</h2>
                         </div>
+                        {(() => {
+                            const count = data.prizes.length;
+                            const rows = Math.max(1, Math.ceil(count / 5));
+                            const cols = Math.max(1, Math.ceil(count / rows));
+                            const gap = count <= 4 ? 24 : 16;
+                            const fontSize = count <= 1 ? '8rem' : count <= 4 ? '5rem' : count <= 9 ? '4rem' : count <= 16 ? '3rem' : '2.5rem';
+
+                            return (
+                                <QuestionGrid cols={cols} rows={rows} gap={gap} fontSize={fontSize} centerLastRow>
+                                    {data.prizes.map((p, idx) => (
+                                        <button key={p.id} disabled={p.isTaken} onClick={() => selectPrize(p.id)} className={`classic-card rounded-xl flex flex-col items-center justify-center transition-all duration-300 transform ${p.isTaken ? 'bg-gray-200 grayscale opacity-60 cursor-not-allowed' : 'hover:-translate-y-2 hover:shadow-xl hover:border-classic-gold'}`}>
+                                            {p.isTaken ? (
+                                                <>
+                                                    <Icon name="CheckCircle" className="text-gray-400" />
+                                                    <span className="mt-1 font-bold text-gray-400 font-amiri" style={{ fontSize: '1em' }}>{idx + 1}</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="text-classic-gold animate-bounce" style={{ animationDuration: '3s' }}><Icon name="Gift" /></div>
+                                                    <span className="mt-1 font-bold text-classic-dark font-amiri" style={{ fontSize: '1em' }}>{idx + 1}</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    ))}
+                                </QuestionGrid>
+                            );
+                        })()}
                     </div>
                 )}
 
