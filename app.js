@@ -194,6 +194,10 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
     const [sponsorForm, setSponsorForm] = useState({ name: '' });
     const sponsorFileInputRef = useRef(null);
 
+    // Expanded sections state for collapsible questions list
+    const [expandedSections, setExpandedSections] = useState({});
+    const toggleSection = (sectionId) => setExpandedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
+
     const prizeFileInputRef = useRef(null);
 
     const handleConfigImageUpload = (key, e) => {
@@ -565,24 +569,51 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
                                 </div>
                                 <button className="btn-classic w-full py-2 rounded font-bold">حفظ السؤال</button>
                             </form>
-                            <div className="max-h-60 overflow-y-auto space-y-2">
-                                {data.questions.map(q => (
-                                    <div key={q.id} className="p-2 border rounded bg-white flex justify-between items-center text-sm">
-                                        <span className="truncate flex-1">{q.text}</span>
-                                        <div className="flex gap-2">
-                                            <button onClick={() => { setEditingId(q.id); setQuestionForm({ ...q, options: [...q.options] }) }} className="text-blue-500"><Icon name="Edit3" /></button>
-                                            <button onClick={() => {
-                                                if (confirm('حذف السؤال؟')) {
-                                                    if (window.api && deleteQuestion) {
-                                                        deleteQuestion(q.id);
-                                                    } else {
-                                                        setData(d => ({ ...d, questions: d.questions.filter(x => x.id !== q.id) }));
-                                                    }
-                                                }
-                                            }} className="text-red-500"><Icon name="Trash2" /></button>
+                            <div className="max-h-80 overflow-y-auto space-y-2">
+                                {data.sections.map(section => {
+                                    const sectionQuestions = data.questions.filter(q => q.sectionId === section.id);
+                                    const isExpanded = expandedSections[section.id];
+                                    return (
+                                        <div key={section.id} className="border rounded bg-white overflow-hidden">
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleSection(section.id)}
+                                                className="w-full p-3 flex items-center justify-between hover:bg-gray-50 transition"
+                                                style={{ borderRight: `4px solid ${section.color}` }}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: section.color }}></span>
+                                                    <span className="font-bold text-sm">{section.title}</span>
+                                                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-bold">{sectionQuestions.length}</span>
+                                                </div>
+                                                <i className={`fas fa-chevron-down text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}></i>
+                                            </button>
+                                            {isExpanded && (
+                                                <div className="border-t border-gray-100 divide-y divide-gray-100">
+                                                    {sectionQuestions.length === 0 ? (
+                                                        <div className="p-3 text-center text-xs text-gray-400">لا توجد أسئلة في هذا القسم</div>
+                                                    ) : sectionQuestions.map(q => (
+                                                        <div key={q.id} className="p-2 px-4 flex justify-between items-center text-sm hover:bg-gray-50">
+                                                            <span className="truncate flex-1">{q.text}</span>
+                                                            <div className="flex gap-2 mr-2">
+                                                                <button onClick={() => { setEditingId(q.id); setQuestionForm({ ...q, options: [...q.options] }) }} className="text-blue-500"><Icon name="Edit3" /></button>
+                                                                <button onClick={() => {
+                                                                    if (confirm('حذف السؤال؟')) {
+                                                                        if (window.api && deleteQuestion) {
+                                                                            deleteQuestion(q.id);
+                                                                        } else {
+                                                                            setData(d => ({ ...d, questions: d.questions.filter(x => x.id !== q.id) }));
+                                                                        }
+                                                                    }
+                                                                }} className="text-red-500"><Icon name="Trash2" /></button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
