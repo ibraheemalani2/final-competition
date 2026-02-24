@@ -186,7 +186,7 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
     const [tab, setTab] = useState('general');
     const [editingId, setEditingId] = useState(null);
     const [sectionForm, setSectionForm] = useState({ title: '', color: '#1b4332' });
-    const [questionForm, setQuestionForm] = useState({ sectionId: '', text: '', type: 'choice', op1: '', op2: '', op3: '', op4: '', answer: '' });
+    const [questionForm, setQuestionForm] = useState({ sectionId: '', text: '', type: 'choice', options: ['', ''], answer: '' });
     const [prizeForm, setPrizeForm] = useState({ name: '' });
     const [newPin, setNewPin] = useState("");
 
@@ -287,10 +287,12 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
 
     const saveQuestion = async (e) => {
         e.preventDefault();
-        const { text, type, op1, op2, op3, op4, answer, sectionId } = questionForm;
+        const { text, type, options: formOptions, answer, sectionId } = questionForm;
         if (!sectionId || !answer) return alert("البيانات ناقصة");
         const sId = parseInt(sectionId);
-        const options = type === 'boolean' ? ['صح', 'خطأ'] : [op1, op2, op3, op4];
+        const options = type === 'boolean' ? ['صح', 'خطأ'] : formOptions.filter(op => op.trim() !== '');
+
+        if (type === 'choice' && options.length < 2) return alert("يجب إضافة خيارين على الأقل");
 
         // Prepare data for Firestore (or local)
         // Note: We don't need 'id' here for new items, Firestore generates it.
@@ -316,7 +318,7 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
         }
 
         setEditingId(null);
-        setQuestionForm({ sectionId: '', text: '', type: 'choice', op1: '', op2: '', op3: '', op4: '', answer: '' });
+        setQuestionForm({ sectionId: '', text: '', type: 'choice', options: ['', ''], answer: '' });
     };
 
     const savePrize = async (e) => {
@@ -547,10 +549,13 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
                                     <label className="flex items-center gap-2"><input type="radio" name="qt" checked={questionForm.type === 'choice'} onChange={() => setQuestionForm({ ...questionForm, type: 'choice' })} /> خيارات</label>
                                     <label className="flex items-center gap-2"><input type="radio" name="qt" checked={questionForm.type === 'boolean'} onChange={() => setQuestionForm({ ...questionForm, type: 'boolean' })} /> صح/خطأ</label>
                                 </div>
-                                {questionForm.type === 'choice' && <div className="grid grid-cols-2 gap-2">{['op1', 'op2', 'op3', 'op4'].map(k => <input key={k} value={questionForm[k]} onChange={e => setQuestionForm({ ...questionForm, [k]: e.target.value })} placeholder={`الخيار ${k.replace('op', '')}`} className="p-2 border rounded" />)}</div>}
+                                {questionForm.type === 'choice' && <div className="space-y-2">
+                                    <div className="grid grid-cols-2 gap-2">{questionForm.options.map((op, i) => <div key={i} className="flex gap-1"><input value={op} onChange={e => { const newOps = [...questionForm.options]; newOps[i] = e.target.value; setQuestionForm({ ...questionForm, options: newOps }); }} placeholder={`الخيار ${i + 1}`} className="p-2 border rounded flex-1" />{questionForm.options.length > 2 && <button type="button" onClick={() => { const newOps = questionForm.options.filter((_, idx) => idx !== i); setQuestionForm({ ...questionForm, options: newOps, answer: questionForm.answer === op ? '' : questionForm.answer }); }} className="text-red-500 hover:text-red-700 px-1 font-bold text-lg" title="حذف الخيار">×</button>}</div>)}</div>
+                                    <button type="button" onClick={() => setQuestionForm({ ...questionForm, options: [...questionForm.options, ''] })} className="text-sm text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1"><Icon name="Plus" size="14" /> إضافة خيار</button>
+                                </div>}
                                 <select value={questionForm.answer} onChange={e => setQuestionForm({ ...questionForm, answer: e.target.value })} className="w-full p-2 border rounded font-bold bg-green-50 text-green-700">
                                     <option value="">الإجابة الصحيحة</option>
-                                    {questionForm.type === 'boolean' ? <><option value="صح">صح</option><option value="خطأ">خطأ</option></> : ['op1', 'op2', 'op3', 'op4'].map(k => questionForm[k] && <option key={k} value={questionForm[k]}>{questionForm[k]}</option>)}
+                                    {questionForm.type === 'boolean' ? <><option value="صح">صح</option><option value="خطأ">خطأ</option></> : questionForm.options.map((op, i) => op.trim() && <option key={i} value={op}>{op}</option>)}
                                 </select>
                                 <button className="btn-classic w-full py-2 rounded font-bold">حفظ السؤال</button>
                             </form>
@@ -559,7 +564,7 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
                                     <div key={q.id} className="p-2 border rounded bg-white flex justify-between items-center text-sm">
                                         <span className="truncate flex-1">{q.text}</span>
                                         <div className="flex gap-2">
-                                            <button onClick={() => { setEditingId(q.id); setQuestionForm({ ...q, op1: q.options[0], op2: q.options[1], op3: q.options[2], op4: q.options[3] }) }} className="text-blue-500"><Icon name="Edit3" /></button>
+                                            <button onClick={() => { setEditingId(q.id); setQuestionForm({ ...q, options: [...q.options] }) }} className="text-blue-500"><Icon name="Edit3" /></button>
                                             <button onClick={() => {
                                                 if (confirm('حذف السؤال؟')) {
                                                     if (window.api && deleteQuestion) {
@@ -1310,10 +1315,10 @@ const App = () => {
 
                             <div className="p-8 bg-gray-50 flex-1 flex flex-col justify-center relative">
                                 {!feedback ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center', alignContent: 'center' }} className="h-full">
                                         {activeQuestion.options.map((op, i) => (
-                                            <button key={i} onClick={() => handleAnswer(op)} className="group p-6 text-2xl font-bold rounded-xl border-2 border-gray-300 bg-white text-gray-700 hover:border-classic-dark hover:bg-emerald-50 hover:text-classic-dark transition-all shadow-sm flex items-center">
-                                                <span className="w-10 h-10 rounded bg-gray-100 border border-gray-300 flex items-center justify-center ml-4 text-sm font-bold group-hover:bg-classic-dark group-hover:text-white">{['أ', 'ب', 'ج', 'د'][i]}</span>
+                                            <button key={i} onClick={() => handleAnswer(op)} style={{ width: 'calc(50% - 0.5rem)' }} className="group p-6 text-2xl font-bold rounded-xl border-2 border-gray-300 bg-white text-gray-700 hover:border-classic-dark hover:bg-emerald-50 hover:text-classic-dark transition-all shadow-sm flex items-center">
+                                                <span className="w-10 h-10 rounded bg-gray-100 border border-gray-300 flex items-center justify-center ml-4 text-sm font-bold group-hover:bg-classic-dark group-hover:text-white">{['أ', 'ب', 'ج', 'د', 'هـ', 'و', 'ز', 'ح', 'ط', 'ي'][i] || (i + 1)}</span>
                                                 {op}
                                             </button>
                                         ))}
