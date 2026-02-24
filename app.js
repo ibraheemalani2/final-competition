@@ -186,7 +186,7 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
     const [tab, setTab] = useState('general');
     const [editingId, setEditingId] = useState(null);
     const [sectionForm, setSectionForm] = useState({ title: '', color: '#1b4332' });
-    const [questionForm, setQuestionForm] = useState({ sectionId: '', text: '', type: 'choice', options: ['', ''], answer: '' });
+    const [questionForm, setQuestionForm] = useState({ sectionId: '', text: '', type: 'choice', options: ['', ''], answer: '', explanation: '', questionFontSize: 2.25 });
     const [prizeForm, setPrizeForm] = useState({ name: '' });
     const [newPin, setNewPin] = useState("");
 
@@ -297,7 +297,7 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
         // Prepare data for Firestore (or local)
         // Note: We don't need 'id' here for new items, Firestore generates it.
         // We don't overwrite isAnswered on edit unless intended.
-        const qData = { text, type, options, answer, sectionId: sId };
+        const qData = { text, type, options, answer, sectionId: sId, explanation: questionForm.explanation || '', questionFontSize: questionForm.questionFontSize || 2.25 };
 
         if (window.api && addQuestion) {
             try {
@@ -318,7 +318,7 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
         }
 
         setEditingId(null);
-        setQuestionForm({ sectionId: '', text: '', type: 'choice', options: ['', ''], answer: '' });
+        setQuestionForm({ sectionId: '', text: '', type: 'choice', options: ['', ''], answer: '', explanation: '', questionFontSize: 2.25 });
     };
 
     const savePrize = async (e) => {
@@ -557,6 +557,12 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
                                     <option value="">الإجابة الصحيحة</option>
                                     {questionForm.type === 'boolean' ? <><option value="صح">صح</option><option value="خطأ">خطأ</option></> : questionForm.options.map((op, i) => op.trim() && <option key={i} value={op}>{op}</option>)}
                                 </select>
+                                <textarea value={questionForm.explanation || ''} onChange={e => setQuestionForm({ ...questionForm, explanation: e.target.value })} placeholder="التفسير (اختياري) - يظهر عند الإجابة الخاطئة" rows="2" className="w-full p-2 border rounded text-sm"></textarea>
+                                <div className="flex items-center gap-2 pt-1">
+                                    <label className="text-xs text-gray-500 font-bold whitespace-nowrap"><Icon name="Type" /> حجم خط السؤال</label>
+                                    <input type="range" min="1" max="5" step="0.25" value={questionForm.questionFontSize || 2.25} onChange={e => setQuestionForm({ ...questionForm, questionFontSize: parseFloat(e.target.value) })} className="flex-1 accent-classic-gold" />
+                                    <span className="text-xs text-gray-500 font-bold w-12 text-center">{(questionForm.questionFontSize || 2.25)}rem</span>
+                                </div>
                                 <button className="btn-classic w-full py-2 rounded font-bold">حفظ السؤال</button>
                             </form>
                             <div className="max-h-60 overflow-y-auto space-y-2">
@@ -1308,7 +1314,7 @@ const App = () => {
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
                         <div className="bg-white w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl flex flex-col border-4 border-classic-gold h-[85vh]">
                             <div className="p-10 bg-classic-dark text-white text-center relative border-b-4 border-classic-gold flex-[0.4] flex flex-col items-center justify-center">
-                                <h3 className="text-4xl font-bold font-amiri leading-relaxed max-w-4xl">{activeQuestion.text}</h3>
+                                <h3 className="font-bold font-amiri leading-relaxed max-w-4xl" style={{ fontSize: `${activeQuestion.questionFontSize || 2.25}rem` }}>{activeQuestion.text}</h3>
 
                                 {appConfig.enableTimer && !feedback && (
                                     <div className={`absolute top-6 right-6 text-2xl font-bold flex items-center gap-2 px-4 py-1 rounded bg-white/10 border ${timer < 10 ? 'text-red-300 border-red-300 animate-pulse' : 'text-classic-gold border-classic-gold'}`}>
@@ -1338,7 +1344,14 @@ const App = () => {
                                             <Icon name={feedback === 'correct' ? 'CheckCircle' : 'XCircle'} />
                                         </div>
                                         <h2 className="text-4xl font-bold mb-2 font-amiri text-gray-800">{feedback === 'correct' ? appConfig.labels.correctTitle : appConfig.labels.wrongTitle}</h2>
-                                        <p className="text-xl text-gray-600 mb-8 font-bold">{feedback === 'correct' ? appConfig.labels.correctMessage : appConfig.labels.wrongMessage}</p>
+                                        {feedback === 'correct' ? (
+                                            <p className="text-xl text-gray-600 mb-8 font-bold">{appConfig.labels.correctMessage}</p>
+                                        ) : (
+                                            <div className="mb-8 space-y-3">
+                                                <p className="text-xl font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-6 py-3 inline-block">الإجابة الصحيحة: {activeQuestion.answer}</p>
+                                                {activeQuestion.explanation && <p className="text-lg text-gray-600 font-bold max-w-2xl mx-auto bg-gray-100 rounded-lg px-6 py-3">{activeQuestion.explanation}</p>}
+                                            </div>
+                                        )}
 
                                         <div className="flex gap-4">
                                             {feedback === 'correct' ?
