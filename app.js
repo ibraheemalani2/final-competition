@@ -271,8 +271,8 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
     const saveSection = async (e) => {
         e.preventDefault();
         const sectionData = editingId
-            ? { id: editingId, title: sectionForm.title, icon: data.sections.find(s => s.id === editingId)?.icon || 'Star', color: sectionForm.color }
-            : { id: Date.now(), title: sectionForm.title, icon: 'Star', color: sectionForm.color };
+            ? { id: editingId, title: sectionForm.title, icon: data.sections.find(s => s.id === editingId)?.icon || 'Star', color: sectionForm.color, titleFontSize: data.sections.find(s => s.id === editingId)?.titleFontSize || 2.25 }
+            : { id: Date.now(), title: sectionForm.title, icon: 'Star', color: sectionForm.color, titleFontSize: 2.25 };
 
         // Save to Firestore — real-time listener will update local state
         try {
@@ -534,7 +534,7 @@ const SettingsModal = ({ appConfig, setAppConfig, data, setData, onClose, onRese
                                 <input type="color" value={sectionForm.color} onChange={e => setSectionForm({ ...sectionForm, color: e.target.value })} className="h-10 w-10 p-0 border-0 cursor-pointer" />
                                 <button className="btn-classic px-6 rounded font-bold">حفظ</button>
                             </form>
-                            {data.sections.map(s => <div key={s.id} className="p-3 bg-white border rounded flex justify-between items-center"><div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full" style={{ backgroundColor: s.color }}></span><span className="font-bold">{s.title}</span></div><div className="flex gap-2"><button onClick={() => { setEditingId(s.id); setSectionForm({ title: s.title, color: s.color }) }} className="text-blue-600"><Icon name="Edit3" /></button><button onClick={async () => { if (confirm('حذف؟')) { try { await deleteSectionFromFirebase(s.id); } catch (err) { console.error(err); } } }} className="text-red-600"><Icon name="Trash2" /></button></div></div>)}
+                            {data.sections.map(s => <div key={s.id} className="p-3 bg-white border rounded space-y-2"><div className="flex justify-between items-center"><div className="flex items-center gap-2"><span className="w-4 h-4 rounded-full" style={{ backgroundColor: s.color }}></span><span className="font-bold">{s.title}</span></div><div className="flex gap-2"><button onClick={() => { setEditingId(s.id); setSectionForm({ title: s.title, color: s.color }) }} className="text-blue-600"><Icon name="Edit3" /></button><button onClick={async () => { if (confirm('حذف؟')) { try { await deleteSectionFromFirebase(s.id); } catch (err) { console.error(err); } } }} className="text-red-600"><Icon name="Trash2" /></button></div></div><div className="flex items-center gap-2 pt-1 border-t border-gray-100"><label className="text-xs text-gray-500 font-bold whitespace-nowrap"><Icon name="Type" /> حجم العنوان</label><input type="range" min="1" max="5" step="0.25" value={s.titleFontSize || 2.25} onChange={async (e) => { const newSize = parseFloat(e.target.value); const updated = { ...s, titleFontSize: newSize }; setData(prev => ({ ...prev, sections: prev.sections.map(sec => sec.id === s.id ? { ...sec, titleFontSize: newSize } : sec) })); try { await saveSectionToFirebase(updated); } catch (err) { console.error(err); } }} className="flex-1 accent-classic-gold" /><span className="text-xs text-gray-500 font-bold w-12 text-center">{(s.titleFontSize || 2.25)}rem</span></div></div>)}
                         </div>
                     )}
 
@@ -1179,20 +1179,32 @@ const App = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
                                 {data.sections.map((s, i) => (
-                                    <button key={s.id} onClick={() => { setActiveSection(s); setView('section') }} className="classic-card group h-80 p-6 flex flex-col justify-between text-right hover:border-classic-gold transition-all duration-200 hover:-translate-y-1">
-                                        <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-md text-white mb-4 border-4 border-white" style={{ background: s.color }}>
-                                            <Icon name={s.icon} />
+                                    <button key={s.id} onClick={() => { setActiveSection(s); setView('section') }} className="classic-card group h-80 p-6 relative hover:border-classic-gold transition-all duration-200 hover:-translate-y-1">
+                                        {/* Star icon - top right */}
+                                        <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem' }}>
+                                            <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-md text-white border-4 border-white" style={{ background: s.color }}>
+                                                <Icon name={s.icon} />
+                                            </div>
                                         </div>
 
-                                        <div>
-                                            <h3 className="text-3xl font-bold text-gray-800 mb-2 font-amiri">{s.title}</h3>
+                                        {/* Title - center */}
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <h3 className="font-bold text-gray-800 font-amiri" style={{ fontSize: `${s.titleFontSize || 2.25}rem` }}>{s.title}</h3>
+                                        </div>
+
+                                        {/* Arrow - bottom left */}
+                                        <div style={{ position: 'absolute', bottom: '1rem', left: '1rem' }}>
+                                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-classic-dark group-hover:text-white transition-colors">
+                                                <Icon name="ArrowRight" size="16" />
+                                            </div>
+                                        </div>
+
+                                        {/* Question count - bottom right */}
+                                        <div style={{ position: 'absolute', bottom: '1rem', right: '1rem' }}>
                                             <div className="inline-flex items-center gap-2 bg-gray-100 px-3 py-1 rounded border border-gray-200">
                                                 <span className="w-2 h-2 rounded-full bg-classic-dark"></span>
                                                 <span className="text-gray-600 font-bold text-sm">{data.questions.filter(q => q.sectionId === s.id && !q.isAnswered).length} {appConfig.labels.questionsRemaining}</span>
                                             </div>
-                                        </div>
-                                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-classic-dark group-hover:text-white transition-colors self-end">
-                                            <Icon name="ArrowRight" size="16" />
                                         </div>
                                     </button>
                                 ))}
