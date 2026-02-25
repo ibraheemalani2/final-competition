@@ -1013,9 +1013,33 @@ const App = () => {
         setTimeout(() => { isLoadingFromFirebase.current = false; }, 2000);
     }, []);
 
-    // Save to localStorage (cache)
-    useEffect(() => { localStorage.setItem('qDataClassic', JSON.stringify(data)); }, [data]);
-    useEffect(() => { localStorage.setItem('qConfigClassic', JSON.stringify(appConfig)); }, [appConfig]);
+    // Save to localStorage (cache) — strip large image data to avoid QuotaExceededError
+    useEffect(() => {
+        try {
+            const cacheData = {
+                ...data,
+                prizes: data.prizes.map(p => ({ ...p, image: undefined })),
+            };
+            localStorage.setItem('qDataClassic', JSON.stringify(cacheData));
+        } catch (e) {
+            console.warn('localStorage quota exceeded for qDataClassic, skipping cache:', e.message);
+        }
+    }, [data]);
+    useEffect(() => {
+        try {
+            const cacheConfig = {
+                ...appConfig,
+                customBgImage: undefined,
+                layoutImages: undefined,
+                _layoutImagePaths: undefined,
+                _customBgImagePath: undefined,
+                sponsors: (appConfig.sponsors || []).map(s => ({ ...s, logo: undefined })),
+            };
+            localStorage.setItem('qConfigClassic', JSON.stringify(cacheConfig));
+        } catch (e) {
+            console.warn('localStorage quota exceeded for qConfigClassic, skipping cache:', e.message);
+        }
+    }, [appConfig]);
 
     // Debounced save of appConfig to Firestore (1s debounce)
     useEffect(() => {

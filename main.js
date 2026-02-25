@@ -58,7 +58,7 @@ function createMenu() {
                     label: 'Clear Cache',
                     click: () => {
                         if (mainWindow) {
-                            mainWindow.webContents.executeJavaScript('localStorage.clear()').then(() => {
+                            mainWindow.webContents.session.clearStorageData().then(() => {
                                 mainWindow.webContents.reload();
                             });
                         }
