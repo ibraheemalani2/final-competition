@@ -52,7 +52,18 @@ function createMenu() {
                 { role: 'zoomIn' },
                 { role: 'zoomOut' },
                 { type: 'separator' },
-                { role: 'togglefullscreen' }
+                { role: 'togglefullscreen' },
+                { type: 'separator' },
+                {
+                    label: 'Clear Cache',
+                    click: () => {
+                        if (mainWindow) {
+                            mainWindow.webContents.executeJavaScript('localStorage.clear()').then(() => {
+                                mainWindow.webContents.reload();
+                            });
+                        }
+                    }
+                }
             ]
         },
         {
