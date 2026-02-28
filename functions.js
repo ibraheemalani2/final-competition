@@ -204,7 +204,13 @@ export const saveSectionToFirebase = async (section) => {
     try {
         const sectionId = String(section.id);
         const sectionRef = doc(db, "sections", sectionId);
-        await setDoc(sectionRef, { title: section.title, icon: section.icon || 'Star', color: section.color, originalId: section.id }, { merge: true });
+        await setDoc(sectionRef, {
+            title: section.title,
+            icon: section.icon || 'Star',
+            color: section.color,
+            originalId: section.id,
+            titleFontSize: section.titleFontSize || 2.25
+        }, { merge: true });
         console.log("Section saved:", sectionId);
     } catch (e) {
         console.error("Error saving section:", e);
