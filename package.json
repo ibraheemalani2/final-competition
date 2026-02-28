@@ -1,6 +1,6 @@
 {
   "name": "final-competetion",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "An interactive competition application",
   "main": "main.js",
   "targets": {
